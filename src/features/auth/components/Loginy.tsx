@@ -121,38 +121,6 @@ export function Loginy() {
       <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 h-full w-full opacity-30" />
       <div className="absolute inset-0 bg-linear-to-br from-transparent via-[#0f172a]/90 to-[#090b12]" />
       <div className="relative flex min-h-screen">
-        <aside className="fixed left-0 top-0 z-20 flex h-screen w-64 flex-col justify-between border-r border-[#3a494b] bg-[#131315] px-6 py-8">
-          <div className="space-y-3">
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.35em] text-[#74f5ff]">SEMTEX</p>
-              <p className="mt-1 text-[10px] uppercase tracking-[0.35em] text-[#b9cacb]">V-0.42_CORE</p>
-            </div>
-            <nav className="space-y-2">
-              <a className="flex items-center gap-3 rounded px-4 py-3 text-sm font-semibold text-[#E5E1E4] bg-[#201f21] border-l-2 border-[#74f5ff]" href="#">
-                <span className="text-base">⌁</span>
-                Terminal
-              </a>
-              <a className="flex items-center gap-3 rounded px-4 py-3 text-sm text-[#b9cacb] hover:bg-[#201f21]" href="#">
-                <span className="text-base">⬢</span>
-                Ingest
-              </a>
-              <a className="flex items-center gap-3 rounded px-4 py-3 text-sm text-[#b9cacb] hover:bg-[#201f21]" href="#">
-                <span className="text-base">⚖</span>
-                Audit
-              </a>
-            </nav>
-          </div>
-          <div className="space-y-2 border-t border-[#3a494b] pt-5">
-            <a className="flex items-center gap-3 rounded px-4 py-3 text-sm text-[#b9cacb] hover:bg-[#201f21]" href="#">
-              <span className="text-base">⚙</span>
-              Settings
-            </a>
-            <a className="flex items-center gap-3 rounded px-4 py-3 text-sm text-[#b9cacb] hover:bg-[#201f21]" href="#">
-              <span className="text-base">🛡</span>
-              Security
-            </a>
-          </div>
-        </aside>
         <main className="ml-64 flex flex-1 items-center justify-center px-6 py-10">
           <div className="relative z-10 flex w-full max-w-4xl flex-col items-center gap-6">
             <div className="scanline" />
