@@ -11,7 +11,16 @@ export function Loginy() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    let renderer: any = null;
+    let frameId = 0;
+    let observer: ResizeObserver | null = null;
+
+    try {
+      renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    } catch {
+      return;
+    }
+
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setClearColor(0x0f172a, 0);
 
@@ -70,12 +79,11 @@ export function Loginy() {
     scene.add(particles);
 
     const clock = new THREE.Clock();
-    let frameId = 0;
 
     const resize = () => {
       const width = canvas.clientWidth;
       const height = canvas.clientHeight;
-      if (!width || !height) return;
+      if (!width || !height || !renderer) return;
       renderer.setSize(width, height, false);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
@@ -88,25 +96,25 @@ export function Loginy() {
       core.rotation.y = elapsed * 0.18;
       particles.rotation.y = elapsed * 0.06;
       particles.rotation.x = Math.sin(elapsed * 0.3) * 0.08;
-      renderer.render(scene, camera);
+      if (renderer) renderer.render(scene, camera);
     };
 
     resize();
     animate();
 
-    const observer = new ResizeObserver(resize);
+    observer = new ResizeObserver(resize);
     observer.observe(canvas);
 
     return () => {
       cancelAnimationFrame(frameId);
-      observer.disconnect();
+      if (observer) observer.disconnect();
       ringGeometry.dispose();
       ringMaterial.dispose();
       coreGeometry.dispose();
       coreMaterial.dispose();
       particleGeometry.dispose();
       particleMaterial.dispose();
-      renderer.dispose();
+      if (renderer) renderer.dispose();
     };
   }, []);
 
@@ -121,7 +129,7 @@ export function Loginy() {
       <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 h-full w-full opacity-30" />
       <div className="absolute inset-0 bg-linear-to-br from-transparent via-[#0f172a]/90 to-[#090b12]" />
       <div className="relative flex min-h-screen">
-        <main className="ml-64 flex flex-1 items-center justify-center px-6 py-10">
+        <main className="flex flex-1 items-center justify-center px-6 py-10">
           <div className="relative z-10 flex w-full max-w-4xl flex-col items-center gap-6">
             <div className="scanline" />
             <div className="text-center space-y-3">
