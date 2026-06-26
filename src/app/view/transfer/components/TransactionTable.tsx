@@ -6,13 +6,13 @@ interface TransactionTableProps {
 
 const STATUS_LABELS: Record<Transaction['status'], string> = {
   ENCRYPTING: 'CIFRANDO',
-  UPLOADING: 'SUBENDO',
+  UPLOADING: 'SUBIENDO',
   COMPLETED: 'COMPLETADO',
   ERROR: 'ERROR',
 };
 
 const STATUS_COLORS: Record<Transaction['status'], string> = {
-  ENCRYPTING: 'text-[#06B6D4]',
+  ENCRYPTING: 'text-[#00E5FF]',
   UPLOADING: 'text-[#F97316]',
   COMPLETED: 'text-[#22C55E]',
   ERROR: 'text-[#EF4444]',
@@ -65,13 +65,16 @@ export function TransactionTable({ transactions }: TransactionTableProps) {
           </thead>
           <tbody>
             {transactions.map((tx) => (
-              <tr key={tx.id} className="border-b border-[#3a494b]/40 hover:bg-[#1a2d30]/30 transition-colors">
-                <td className="px-4 py-3 text-[#E5E1E4] font-mono">{tx.filename}</td>
-                <td className="px-4 py-3 text-[#b9cacb]">{tx.sender}</td>
-                <td className={`px-4 py-3 font-semibold ${STATUS_COLORS[tx.status]}`}>
+              <tr
+                key={tx.id}
+                className="border-b border-[#3a494b]/40 transition-all duration-200"
+              >
+                <td className="px-4 py-3 text-[#E5E1E4] font-mono text-[12px]">{tx.filename}</td>
+                <td className="px-4 py-3 text-[#b9cacb] text-[11px]">{tx.sender}</td>
+                <td className={`px-4 py-3 font-semibold text-[11px] ${STATUS_COLORS[tx.status]}`}>
                   {STATUS_LABELS[tx.status]}
                 </td>
-                <td className="px-4 py-3 text-[#b9cacb] text-[10px]">{formatTimestamp(tx.timestamp)}</td>
+                <td className="px-4 py-3 text-[#b9cacb] text-[10px] font-mono">{formatTimestamp(tx.timestamp)}</td>
               </tr>
             ))}
           </tbody>

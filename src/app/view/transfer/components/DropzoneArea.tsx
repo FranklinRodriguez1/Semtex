@@ -1,6 +1,7 @@
 'use client';
 
 import { useDropzone } from 'react-dropzone';
+import { useState } from 'react';
 
 interface DropzoneAreaProps {
   onFileSelect: (file: File) => void;
@@ -21,6 +22,8 @@ const ACCEPTED_TYPES = {
 };
 
 export function DropzoneArea({ onFileSelect, disabled }: DropzoneAreaProps) {
+  const [hovered, setHovered] = useState(false);
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: (acceptedFiles) => {
       const file = acceptedFiles[0];
@@ -34,20 +37,39 @@ export function DropzoneArea({ onFileSelect, disabled }: DropzoneAreaProps) {
   return (
     <div
       {...getRootProps()}
-      className={`border-2 border-dashed p-10 text-center rounded-sm mb-6 transition-all cursor-pointer
-        ${isDragActive
-          ? 'border-cyan-400 bg-cyan-950/20 shadow-[0_0_20px_rgba(6,182,212,0.3)] animate-pulse'
-          : 'border-[#06B6D4]/30 animate-led-pulse bg-[#0e0e10]/50'
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className={`
+        relative border-2 border-dashed p-10 text-center rounded-sm mb-6
+        transition-all duration-300 cursor-pointer overflow-hidden
+        ${
+          isDragActive
+            ? 'border-[#00E5FF] bg-[#00E5FF]/10 shadow-[0_0_30px_rgba(0,229,255,0.4)] scale-[1.01]'
+            : hovered
+              ? 'border-[#00E5FF]/60 bg-[#00E5FF]/5 shadow-[0_0_15px_rgba(0,229,255,0.15)]'
+              : 'border-[#00E5FF]/30 bg-[#0e0e10]/50 animate-led-pulse'
         }
         ${disabled ? 'opacity-40 pointer-events-none' : ''}
       `}
     >
       <input {...getInputProps()} />
-      <div className="text-4xl mb-4 text-[#06B6D4]">⤓</div>
-      <p className={`text-[12px] uppercase tracking-[0.3em] ${isDragActive ? 'text-cyan-300' : 'text-[#06B6D4]'}`}>
+      <div
+        className={`text-4xl mb-4 transition-all duration-300 ${
+          isDragActive ? 'text-[#00E5FF] scale-110' : 'text-[#00E5FF]'
+        }`}
+      >
+        ⤓
+      </div>
+      <p
+        className={`text-[12px] uppercase tracking-[0.3em] transition-all duration-300 ${
+          isDragActive ? 'text-[#00E5FF]' : 'text-[#00E5FF]/80'
+        }`}
+      >
         {isDragActive ? 'SOLTAR ARCHIVO AHORA' : 'SOLTAR DOCUMENTOS PARA CIFRADO'}
       </p>
-      <p className="text-[9px] text-[#3a494b] mt-2">O SELECCIONAR DESDE EL SISTEMA LOCAL</p>
+      <p className="text-[9px] text-[#3a494b] mt-2 tracking-[0.15em]">
+        O SELECCIONAR DESDE EL SISTEMA LOCAL
+      </p>
     </div>
   );
 }
