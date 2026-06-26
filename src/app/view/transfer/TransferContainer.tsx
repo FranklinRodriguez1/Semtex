@@ -36,17 +36,9 @@ export function TransferContainer() {
           </div>
           <div className="absolute inset-0 rounded-3xl bg-[#0e0e10]/65" />
           <div
-            className="absolute left-1 top-1 bottom-1 w-[calc(50%-10px)] rounded-3xl flex items-center justify-center transition-all duration-500 ease-in-out"
+            className="absolute left-1 top-1 bottom-1 w-[calc(50%-10px)] rounded-3xl transition-all duration-500 ease-in-out"
             style={activeIndicatorStyle}
-          >
-            <span
-              className="h-3 w-3 rounded-full transition-all duration-500"
-              style={{
-                backgroundColor: accentColor,
-                boxShadow: `0 0 14px rgba(${accentRgb},0.65)`,
-              }}
-            />
-          </div>
+          />
         </button>
       </div>
 

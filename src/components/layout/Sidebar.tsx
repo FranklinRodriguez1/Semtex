@@ -11,8 +11,8 @@ export function Sidebar() {
           <a className="flex items-center gap-3 rounded px-4 py-3 text-sm font-semibold text-[#E5E1E4] hover:bg-[#201f21]" href="/terminal">
             <span className="text-base">⌁</span> Terminal
           </a>
-          <a className="flex items-center gap-3 rounded px-4 py-3 text-sm text-[#b9cacb] hover:bg-[#201f21]" href="/transfer">
-            <span className="text-base">⬢</span> Ingest
+          <a className="flex items-center gap-3 rounded px-4 py-3 text-sm text-[#b9cacb] hover:bg-[#201f21]" href="/view/transfer">
+            <span className="text-base">⬢</span> Upload - Receive
           </a>
           <a className="flex items-center gap-3 rounded px-4 py-3 text-sm text-[#b9cacb] hover:bg-[#201f21]" href="/audit">
             <span className="text-base">⚖</span> Audit

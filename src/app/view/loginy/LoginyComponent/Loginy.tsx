@@ -141,23 +141,15 @@ export function Loginy() {
                 onClick={() => setIsLogin((value) => !value)}
                 className="group relative w-48 h-16 overflow-hidden rounded-3xl bg-[rgba(15,23,42,0.7)] p-1 transition-transform duration-200 hover:scale-[0.99]"
               >
-                <div className="absolute inset-0 flex justify-between px-4 items-center text-[11px] uppercase tracking-[0.3em]">
-                  <span className={isLogin ? "text-[#06b6d4]/40" : "text-[#06b6d4] font-bold"}>REGISTER</span>
-                  <span className={isLogin ? "text-[#F97316] font-bold" : "text-[#F97316]/40"}>LOGIN</span>
+                <div className="absolute inset-0 flex justify-between px-4 items-center text-[11px] uppercase tracking-[0.3em] z-10">
+                  <span className={isLogin ? "text-[#22d3ee] font-bold" : "text-[#22d3ee] font-extrabold tracking-[0.35em]"}>REGISTER</span>
+                  <span className={isLogin ? "text-[#fb923c] font-extrabold tracking-[0.35em]" : "text-[#fb923c] font-bold"}>LOGIN</span>
                 </div>
-                <div className="absolute inset-0 rounded-3xl bg-[#0e0e10]/65" />
+                <div className="absolute inset-0 rounded-3xl bg-[#0e0e10]/30" />
                 <div
-                  className="absolute left-1 top-1 bottom-1 w-[calc(50%-10px)] rounded-3xl flex items-center justify-center transition-all duration-500 ease-in-out"
+                  className="absolute left-1 top-1 bottom-1 w-[calc(50%-10px)] rounded-3xl transition-all duration-500 ease-in-out"
                   style={activeIndicatorStyle}
-                >
-                  <span
-                    className="h-3 w-3 rounded-full transition-all duration-500"
-                    style={{
-                      backgroundColor: isLogin ? "#F97316" : "#06B6D4",
-                      boxShadow: isLogin ? "0 0 14px rgba(249,115,22,0.65)" : "0 0 8px rgba(6,182,212,0.55)",
-                    }}
-                  />
-                </div>
+                />
               </button>
             </div>
             <div className="w-full max-w-md relative min-h-80">
