@@ -5,12 +5,12 @@
     "": {
       "name": "semtex-app-front",
       "dependencies": {
-        "semtex-app-front": ".",
         "next": "16.2.9",
         "react": "19.2.4",
         "react-dom": "19.2.4",
         "react-dropzone": "^15.0.0",
-        "three": "^0.168.0",
+        "semtex-app-front": ".",
+        "three": "^0.185.0",
       },
       "devDependencies": {
         "@tailwindcss/postcss": "^4",
@@ -815,7 +815,7 @@
 
     "tapable": ["tapable@2.3.3", "", {}, "sha512-uxc/zpqFg6x7C8vOE7lh6Lbda8eEL9zmVm/PLeTPBRhh1xCgdWaQ+J1CUieGpIfm2HdtsUpRv+HshiasBMcc6A=="],
 
-    "three": ["three@0.168.0", "", {}, "sha512-6m6jXtDwMJEK/GGMbAOTSAmxNdzKvvBzgd7q8bE/7Tr6m7PaBh5kKLrN7faWtlglXbzj7sVba48Idwx+NRsZXw=="],
+    "three": ["three@0.185.0", "", {}, "sha512-+yRrcRO2iZa8uzvNNl0d7cL4huhgKgBvVJ0njcTe8xFqZ6DMAFZdCKDP91SEAuj25bNAj7k1QQdf+srZywVK6w=="],
 
     "tinyglobby": ["tinyglobby@0.2.17", "", { "dependencies": { "fdir": "^6.5.0", "picomatch": "^4.0.4" } }, "sha512-wXR/dYpcqKmfWpEdZjiKJOwCNFndD0DMnrW/cYjVGttEkBfVgcLFHoNrlj47mjOVic9yyNu65alsgF4NQyTa2g=="],
 
