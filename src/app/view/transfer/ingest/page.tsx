@@ -1,7 +1,9 @@
 
  const Ingest = () => {
   return (
-    <div>ingest</div>
+    <div>
+        <h1>prueba de protecciones en repo</h1>
+    </div>
   )
 }
 export default Ingest
