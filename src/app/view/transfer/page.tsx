@@ -1,5 +1,5 @@
-import { TransferDashboard } from "@/app/view/transfer/components/TransferDashboard";
+import { TransferContainer } from "./TransferContainer";
 
 export default function TransferPage() {
-  return <TransferDashboard />;
+  return <TransferContainer />;
 }
