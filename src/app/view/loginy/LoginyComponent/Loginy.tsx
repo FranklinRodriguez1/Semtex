@@ -81,7 +81,7 @@ export function Loginy() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    let renderer: any = null;
+    let renderer: THREE.WebGLRenderer | null = null;
     let frameId = 0;
     let observer: ResizeObserver | null = null;
 

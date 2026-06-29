@@ -36,8 +36,23 @@ export default function TeamPage() {
   }, []);
 
   useEffect(() => {
-    getClaims().then(setClaims);
-    loadUsers();
+    let active = true;
+
+    async function bootstrap() {
+      const currentClaims = await getClaims();
+      if (!active) {
+        return;
+      }
+
+      setClaims(currentClaims);
+      await loadUsers();
+    }
+
+    void bootstrap();
+
+    return () => {
+      active = false;
+    };
   }, [loadUsers]);
 
   async function handleInvite(e: React.FormEvent) {

@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { getInternal } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 
@@ -15,6 +17,7 @@ interface Me {
 export function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
+  const { user } = useAuth();
   const [me, setMe] = useState<Me | null>(null);
 
   useEffect(() => {
@@ -38,7 +41,7 @@ export function Sidebar() {
           <p className="font-bold uppercase text-[1.3rem] tracking-[0.35em] text-[#74f5ff]">SEMTEX</p>
         </div>
         <nav className="space-y-2">
-          <a
+          <Link
             className={`flex items-center gap-3 rounded px-4 py-3 text-sm font-semibold transition-colors ${
               isActive("/") || pathname === "/"
                 ? "border-l-2 border-[#74f5ff] bg-[#201f21] text-[#E5E1E4]"
@@ -47,8 +50,8 @@ export function Sidebar() {
             href="/"
           >
             <span className="text-base">⌁</span> Home
-          </a>
-          <a
+          </Link>
+          <Link
             className={`flex items-center gap-3 rounded px-4 py-3 text-sm transition-colors ${
               isActive("/view/transfer")
                 ? "border-l-2 border-[#74f5ff] bg-[#201f21] text-[#E5E1E4] font-semibold"
@@ -56,9 +59,9 @@ export function Sidebar() {
             }`}
             href="/view/transfer"
           >
-            <span className="text-base">⬢</span> Upload - Receive
-          </a>
-          <a
+            <span className="text-base">•</span> Upload - Receive
+          </Link>
+          <Link
             className={`flex items-center gap-3 rounded px-4 py-3 text-sm transition-colors ${
               isActive("/view/configuration")
                 ? "border-l-2 border-[#74f5ff] bg-[#201f21] text-[#E5E1E4] font-semibold"
@@ -67,8 +70,8 @@ export function Sidebar() {
             href="/view/configuration"
           >
             <span className="text-base">⚙</span> Config
-          </a>
-          <a
+          </Link>
+          <Link
             className={`flex items-center gap-3 rounded px-4 py-3 text-sm transition-colors ${
               isActive("/view/team")
                 ? "border-l-2 border-[#74f5ff] bg-[#201f21] text-[#E5E1E4] font-semibold"
@@ -77,9 +80,9 @@ export function Sidebar() {
             href="/view/team"
           >
             <span className="text-base">👥</span> Usuarios
-          </a>
+          </Link>
           {me?.isSuperAdmin && (
-            <a
+            <Link
               className={`flex items-center gap-3 rounded px-4 py-3 text-sm transition-colors ${
                 isActive("/view/admin")
                   ? "border-l-2 border-[#74f5ff] bg-[#201f21] text-[#E5E1E4] font-semibold"
@@ -88,9 +91,9 @@ export function Sidebar() {
               href="/view/admin"
             >
               <span className="text-base">🏢</span> Empresas
-            </a>
+            </Link>
           )}
-          <a
+          <Link
             className={`flex items-center gap-3 rounded px-4 py-3 text-sm transition-colors ${
               isActive("/audit")
                 ? "border-l-2 border-[#74f5ff] bg-[#201f21] text-[#E5E1E4] font-semibold"
@@ -99,22 +102,22 @@ export function Sidebar() {
             href="/audit"
           >
             <span className="text-base">⚖</span> Audit
-          </a>
+          </Link>
         </nav>
       </div>
       <div className="space-y-2 border-t border-[#3a494b] pt-5">
-        {me?.email && (
-          <p className="px-4 text-[10px] text-[#b9cacb] truncate" title={me.email}>
-            {me.email}
-            {me.isSuperAdmin ? " · SUPER-ADMIN" : me.role ? ` · ${me.role}` : ""}
+        {user?.email && (
+          <p className="px-4 text-[10px] text-[#b9cacb] truncate" title={user.email}>
+            {user.name} · {user.email}
+            {me?.isSuperAdmin ? " · SUPER-ADMIN" : me?.role ? ` · ${me.role}` : ""}
           </p>
         )}
-        <a
+        <Link
           className="flex items-center gap-3 rounded px-4 py-3 text-sm text-[#b9cacb] hover:bg-[#201f21]"
           href="/settings"
         >
           <span className="text-base">⚙</span> Settings
-        </a>
+        </Link>
         <button
           onClick={handleLogout}
           className="flex w-full items-center gap-3 rounded px-4 py-3 text-left text-sm text-[#b9cacb] hover:bg-[#201f21]"
