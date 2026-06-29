@@ -41,7 +41,7 @@ plataforma crea cada empresa + su admin; el **admin** invita a sus empleados.
 
 ## Setup local
 
-1. Variables en `.env.local` (en la raíz del front). Pide las claves al líder del repo:
+1. Variables en `.env` (en la raíz del front). Pide las claves al líder del repo:
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://cwubsogxbiuxyjihghag.supabase.co
@@ -140,7 +140,7 @@ Cada usuario carga su `org_id` en el token. El backend filtra **toda** consulta 
 - **Backend:** ✅ desplegado en Render → `https://semtex-backend.onrender.com`
   (Docker + perfil `prod`). Guía y variables: `semtex-application-backend/DEPLOY.md`.
 - **Front:** pendiente desplegar en **Vercel** (Next.js). Configura las mismas variables de
-  `.env.local` en el panel de Vercel, y agrega su dominio al CORS del backend (en Render,
+  `.env` en el panel de Vercel, y agrega su dominio al CORS del backend (en Render,
   `SEMTEX_CORS_ALLOWED_ORIGINS`).
 - La base de datos ya es Supabase (en la nube). **Login funciona sin MinIO ni Ollama** (esos
   solo hacen falta para documentos y chat).

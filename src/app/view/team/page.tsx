@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { getClaims, postInternal, type Claims } from "@/lib/session";
+import { RoleGuard } from "@/components/auth/RoleGuard";
 
 interface BackendUser {
   id: string;
@@ -36,8 +37,23 @@ export default function TeamPage() {
   }, []);
 
   useEffect(() => {
-    getClaims().then(setClaims);
-    loadUsers();
+    let active = true;
+
+    async function bootstrap() {
+      const currentClaims = await getClaims();
+      if (!active) {
+        return;
+      }
+
+      setClaims(currentClaims);
+      await loadUsers();
+    }
+
+    void bootstrap();
+
+    return () => {
+      active = false;
+    };
   }, [loadUsers]);
 
   async function handleInvite(e: React.FormEvent) {
@@ -62,6 +78,7 @@ export default function TeamPage() {
   const isAdmin = claims?.app_role === "ADMIN";
 
   return (
+    <RoleGuard roles={["ADMIN"]}>
     <div className="min-h-full bg-[#000000] p-8 text-[#E5E1E4]">
       <div className="mx-auto max-w-2xl">
         <div className="mb-6 border-b border-[#3a494b] pb-4">
@@ -182,5 +199,6 @@ export default function TeamPage() {
         </div>
       </div>
     </div>
+    </RoleGuard>
   );
 }
