@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { postInternal } from "@/lib/session";
+import { createCompany } from "./services/admin";
 
 export default function SuperAdminPage() {
   const [companyName, setCompanyName] = useState("");
@@ -17,10 +17,11 @@ export default function SuperAdminPage() {
     setOk(null);
     setLoading(true);
     try {
-      const res = await postInternal<{ email: string; companyName: string }>(
-        "/api/admin/companies",
-        { companyName, adminEmail, adminPassword },
-      );
+      const res = await createCompany({
+        companyName,
+        adminEmail,
+        adminPassword,
+      });
       setOk(
         `Empresa "${res.companyName}" creada. Admin: ${res.email}. Entrégale sus credenciales.`,
       );

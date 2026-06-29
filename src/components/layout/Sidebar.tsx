@@ -114,7 +114,7 @@ export function Sidebar() {
         )}
         <Link
           className="flex items-center gap-3 rounded px-4 py-3 text-sm text-[#b9cacb] hover:bg-[#201f21]"
-          href="/settings"
+          href="/view/configuration"
         >
           <span className="text-base">⚙</span> Settings
         </Link>
