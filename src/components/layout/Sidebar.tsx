@@ -66,6 +66,9 @@ export function Sidebar() {
           >
             <span className="text-base">⬢</span> Upload - Receive
           </a>
+          <a className="flex items-center gap-3 rounded px-4 py-3 text-sm text-[#b9cacb] hover:bg-[#201f21]" href="/view/configuration">
+            <span className="text-base">⚙</span> Config
+          </a>
           <a className="flex items-center gap-3 rounded px-4 py-3 text-sm text-[#b9cacb] hover:bg-[#201f21]" href="/view/team">
             <span className="text-base">👥</span> Usuarios
           </a>
