@@ -1,21 +1,17 @@
 'use client';
 
-import { useTransfer } from './hooks/useTransfer';
+import type { useDocuments } from './hooks/useTransfer';
 import { DropzoneArea } from './components/DropzoneArea';
-import { ProgressBar } from './components/ProgressBar';
-import { TransactionTable } from './components/TransactionTable';
 
 interface SendViewProps {
-  files?: File[];
-  onAction?: (action: string, data?: unknown) => void;
+  docs: ReturnType<typeof useDocuments>;
 }
 
-export function SendView(_props: SendViewProps) {
-  const { state, handleUpload, reset, dismissError } = useTransfer();
+export function SendView({ docs }: SendViewProps) {
+  const { upload, uploading, uploadError, lastUploaded, dismissUploadError } = docs;
 
   const onFileSelect = (file: File) => {
-    const sender = 'USER@SEMTEX.CORE';
-    handleUpload(file, sender);
+    void upload(file);
   };
 
   return (
@@ -29,26 +25,26 @@ export function SendView(_props: SendViewProps) {
       <div className="flex justify-between items-end border-b border-[#3a494b] pb-4 mb-6">
         <div>
           <h1 className="text-[14px] uppercase tracking-[0.2em] text-[#00E5FF]">
-            Document Transfer Protocol
+            Subir documento financiero
           </h1>
           <p className="text-[10px] text-[#3a494b] mt-1 tracking-[0.15em]">
-            SECURE_P2P_TUNNEL_V2.0
+            EXCEL / CSV → INGESTA DE REGISTROS
           </p>
         </div>
         <div className="text-right text-[10px] uppercase tracking-[0.2em] text-[#b9cacb] font-mono">
-          <p>AES-256-GCM / RSA-4096</p>
+          <p>.XLSX · .XLS · .CSV</p>
         </div>
       </div>
 
       {/* Dropzone */}
-      <DropzoneArea onFileSelect={onFileSelect} disabled={state.status === 'uploading'} />
+      <DropzoneArea onFileSelect={onFileSelect} disabled={uploading} />
 
       {/* Error toast */}
-      {state.error && (
+      {uploadError && (
         <div className="mb-4 animate-slide-up flex items-center justify-between bg-[#EF4444]/10 border border-[#EF4444]/30 px-4 py-2 text-[11px] text-[#EF4444]">
-          <span className="tracking-0.05em">ERROR: {state.error}</span>
+          <span className="tracking-[0.05em]">ERROR: {uploadError}</span>
           <button
-            onClick={dismissError}
+            onClick={dismissUploadError}
             className="text-[#EF4444]/60 hover:text-[#EF4444] ml-4 transition-colors"
           >
             ✕
@@ -56,29 +52,23 @@ export function SendView(_props: SendViewProps) {
         </div>
       )}
 
-      {/* Progress */}
-      {state.status === 'uploading' && (
-        <ProgressBar
-          value={state.progress.percentage}
-          fileName={state.currentFile?.name}
-        />
-      )}
-
-      {/* Success indicator */}
-      {state.status === 'completed' && (
-        <div className="mb-8 animate-fade-in text-[10px] text-[#22C55E] uppercase tracking-[0.2em]">
-          ✓ Transferencia completada — {state.transactions[0]?.filename}
-          <button
-            onClick={reset}
-            className="ml-4 text-[#00E5FF] underline hover:text-[#22C55E] transition-colors"
-          >
-            Nueva transferencia
-          </button>
+      {/* Uploading indicator (indeterminado: fetch no expone progreso real) */}
+      {uploading && (
+        <div className="mb-4 flex items-center gap-3 border border-[#00E5FF]/30 bg-[#00E5FF]/5 px-4 py-3">
+          <span className="h-2 w-2 animate-ping rounded-full bg-[#00E5FF]" />
+          <span className="text-[11px] uppercase tracking-[0.2em] text-[#00E5FF]">
+            Subiendo e ingiriendo registros…
+          </span>
         </div>
       )}
 
-      {/* Transaction History */}
-      <TransactionTable transactions={state.transactions} />
+      {/* Success indicator */}
+      {!uploading && lastUploaded && (
+        <div className="mb-4 animate-fade-in border border-[#22C55E]/30 bg-[#22C55E]/5 px-4 py-3 text-[11px] text-[#22C55E]">
+          ✓ <span className="font-mono">{lastUploaded.name}</span> subido e ingerido
+          correctamente. Ya aparece en &quot;Recibir&quot; y puedes consultarlo en el chat.
+        </div>
+      )}
     </>
   );
 }

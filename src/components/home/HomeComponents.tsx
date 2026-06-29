@@ -1,16 +1,104 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { initializeThreeScene } from './animationHomeThree';
+import { getInternal } from '@/lib/session';
+import { useChat } from './useChat';
+import { useSpeech } from './useSpeech';
+import { listDocuments, type BackendDocument } from '@/app/view/transfer/services/transfer';
+
+interface Me {
+  isSuperAdmin: boolean;
+  role: string | null;
+}
 
 export default function HomeComponents() {
+  const [enabled, setEnabled] = useState(false);
+  const [input, setInput] = useState('');
+  const [documents, setDocuments] = useState<BackendDocument[]>([]);
+  const [selectedDocId, setSelectedDocId] = useState('');
+  const [speakOn, setSpeakOn] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const spokenRef = useRef(0);
+  const selectedDocRef = useRef(selectedDocId);
+
+  useEffect(() => {
+    selectedDocRef.current = selectedDocId;
+  }, [selectedDocId]);
+
+  const { messages, sending, error, send, lastReply } = useChat(enabled);
+
+  const {
+    supported: micSupported,
+    listening,
+    interim,
+    error: micError,
+    start: startMic,
+    stop: stopMic,
+    speak,
+    cancelSpeech,
+  } = useSpeech({
+    onFinal: (text) => {
+      setInput('');
+      void send(text, selectedDocRef.current || undefined);
+    },
+  });
+
   useEffect(() => {
     const cleanup = initializeThreeScene('three-sphere-scene');
     return () => {
       cleanup?.();
     };
   }, []);
+
+  useEffect(() => {
+    getInternal<Me>('/api/me')
+      .then((me) => setEnabled(me.role === 'ADMIN' || me.role === 'OPERATOR'))
+      .catch(() => setEnabled(false));
+  }, []);
+
+  useEffect(() => {
+    if (!enabled) return;
+    let active = true;
+    listDocuments()
+      .then((docs) => {
+        if (active) setDocuments(docs);
+      })
+      .catch(() => {
+        // sin documentos o sin permiso: se ignora
+      });
+    return () => {
+      active = false;
+    };
+  }, [enabled]);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+  }, [messages, sending]);
+
+  // Lee en voz solo las respuestas nuevas (no el historial) cuando la voz está activa.
+  useEffect(() => {
+    if (lastReply && lastReply.n > spokenRef.current) {
+      spokenRef.current = lastReply.n;
+      if (speakOn) speak(lastReply.text);
+    }
+  }, [lastReply, speakOn, speak]);
+
+  // Al apagar la voz, corta cualquier lectura en curso.
+  useEffect(() => {
+    if (!speakOn) cancelSpeech();
+  }, [speakOn, cancelSpeech]);
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!enabled || sending) return;
+    const text = input;
+    setInput('');
+    void send(text, selectedDocId || undefined);
+  }
+
+  const hasConversation = messages.length > 0 || sending || error !== null;
 
   return (
     <div className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden bg-background">
@@ -49,7 +137,69 @@ export default function HomeComponents() {
 
         {/* Interaction bar */}
         <div className="relative z-30 mt-8 w-full max-w-4xl transition-all duration-300">
-          <div className="glass-panel glass-input group flex h-18 items-center gap-3 rounded-lg px-5 shadow-2xl transition-all duration-300 transform hover:scale-[1.01]">
+          {/* Conversation panel */}
+          {hasConversation && (
+            <div
+              ref={scrollRef}
+              className="glass-panel mb-4 max-h-[38vh] overflow-y-auto rounded-lg px-5 py-4 space-y-3 shadow-2xl"
+            >
+              {messages.map((m, i) => (
+                <div
+                  key={i}
+                  className={`flex ${m.role === 'USER' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[80%] whitespace-pre-wrap rounded-lg px-3 py-2 text-[13px] leading-relaxed ${
+                      m.role === 'USER'
+                        ? 'bg-[#00dbe7]/15 text-on-surface'
+                        : 'bg-surface-variant/40 text-on-surface'
+                    }`}
+                  >
+                    {m.content}
+                  </div>
+                </div>
+              ))}
+
+              {sending && (
+                <div className="flex justify-start">
+                  <div className="rounded-lg bg-surface-variant/40 px-3 py-2 text-[13px] text-on-surface-variant">
+                    <span className="animate-pulse">Analizando…</span>
+                  </div>
+                </div>
+              )}
+
+              {error && (
+                <div className="rounded-lg border border-[#EF4444]/30 bg-[#EF4444]/10 px-3 py-2 text-[12px] text-[#EF4444]">
+                  {error}
+                </div>
+              )}
+            </div>
+          )}
+
+          {enabled && documents.length > 0 && (
+            <div className="mb-2 flex items-center gap-2 px-1">
+              <span className="text-[10px] uppercase tracking-widest text-on-surface-variant opacity-60">
+                Documento:
+              </span>
+              <select
+                value={selectedDocId}
+                onChange={(e) => setSelectedDocId(e.target.value)}
+                className="max-w-[60%] truncate rounded-md border border-outline-variant bg-[#0e0e10] px-2 py-1 text-[11px] text-on-surface outline-none focus:border-primary-fixed-dim"
+              >
+                <option value="">Sin documento (general)</option>
+                {documents.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <form
+            onSubmit={handleSubmit}
+            className="glass-panel glass-input group flex h-18 items-center gap-3 rounded-lg px-5 shadow-2xl transition-all duration-300 transform hover:scale-[1.01]"
+          >
             <Image
               src="/console.png"
               alt="Terminal"
@@ -61,35 +211,79 @@ export default function HomeComponents() {
 
             <input
               autoComplete="off"
-              className="w-full min-w-0 flex-1 border-none bg-transparent outline-none focus:ring-0 text-on-surface font-data-tabular text-data-tabular placeholder-on-surface-variant"
-              placeholder="Ingresa un comando financiero o arrastra un reporte aquí..."
+              value={listening ? interim : input}
+              onChange={(e) => setInput(e.target.value)}
+              disabled={!enabled || sending || listening}
+              className="w-full min-w-0 flex-1 border-none bg-transparent outline-none focus:ring-0 text-on-surface font-data-tabular text-data-tabular placeholder-on-surface-variant disabled:opacity-60"
+              placeholder={
+                !enabled
+                  ? 'El chat está disponible para roles ADMIN y OPERATOR.'
+                  : listening
+                    ? 'Escuchando… habla ahora'
+                    : 'Pregunta sobre tus datos financieros…'
+              }
               spellCheck={false}
               type="text"
             />
 
             <div className="ml-2 flex items-center gap-2 border-l border-outline-variant pl-3">
+              {/* Toggle de voz (que lea las respuestas) */}
               <button
-                className="flex h-8 w-8 items-center justify-center rounded text-on-surface-variant transition-colors hover:bg-surface-variant hover:text-primary-fixed-dim"
-                title="Voice Input"
                 type="button"
+                onClick={() => setSpeakOn((v) => !v)}
+                disabled={!enabled}
+                title={
+                  speakOn
+                    ? 'Voz activada: lee las respuestas (clic para silenciar)'
+                    : 'Voz desactivada (clic para que lea las respuestas)'
+                }
+                className={`flex h-8 w-8 items-center justify-center rounded text-base transition-colors disabled:opacity-40 ${
+                  speakOn
+                    ? 'text-[#00dbe7]'
+                    : 'text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed-dim'
+                }`}
+              >
+                {speakOn ? '🔊' : '🔇'}
+              </button>
+
+              {/* Micrófono (hablar para dictar) */}
+              <button
+                type="button"
+                onClick={() => (listening ? stopMic() : startMic())}
+                disabled={!enabled || !micSupported}
+                title={
+                  !micSupported
+                    ? 'Tu navegador no soporta reconocimiento de voz'
+                    : listening
+                      ? 'Detener'
+                      : 'Hablar'
+                }
+                className={`flex h-8 w-8 items-center justify-center rounded transition-colors disabled:opacity-40 ${
+                  listening
+                    ? 'animate-pulse bg-[#EF4444]/20 text-[#EF4444] ring-1 ring-[#EF4444]/50'
+                    : 'text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed-dim'
+                }`}
               >
                 <Image
                   src="/mic.png"
                   alt="Micrófono"
                   width={20}
                   height={20}
-                  className="opacity-90 transition-opacity hover:opacity-100"
+                  className="opacity-90"
                   style={{ filter: 'brightness(0) invert(1)' }}
                 />
               </button>
+
+              {/* Enviar */}
               <button
-                className="flex h-8 w-8 items-center justify-center rounded text-on-surface-variant transition-colors hover:bg-surface-variant hover:text-primary-fixed-dim"
-                title="Attach Document"
-                type="button"
+                type="submit"
+                disabled={!enabled || sending || listening || input.trim() === ''}
+                className="flex h-8 w-8 items-center justify-center rounded text-on-surface-variant transition-colors hover:bg-surface-variant hover:text-primary-fixed-dim disabled:opacity-40"
+                title="Enviar"
               >
                 <Image
                   src="/upload.png"
-                  alt="Adjuntar archivo"
+                  alt="Enviar"
                   width={20}
                   height={20}
                   className="opacity-90 transition-opacity hover:opacity-100"
@@ -97,12 +291,22 @@ export default function HomeComponents() {
                 />
               </button>
             </div>
-          </div>
+          </form>
 
           {/* Command hint */}
           <div className="mt-4 text-center">
-            <p className="font-data-tabular text-[10px] uppercase tracking-widest text-on-surface-variant opacity-50">
-              System ready. Waiting for input...
+            <p
+              className={`font-data-tabular text-[10px] uppercase tracking-widest ${
+                micError ? 'text-[#EF4444] opacity-80' : 'text-on-surface-variant opacity-50'
+              }`}
+            >
+              {listening
+                ? '● Escuchando… habla ahora'
+                : micError
+                  ? micError
+                  : sending
+                    ? 'Procesando consulta…'
+                    : 'System ready. Waiting for input...'}
             </p>
           </div>
         </div>
