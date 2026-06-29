@@ -81,7 +81,7 @@ export function Loginy() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    let renderer: THREE.WebGLRenderer | null = null;
+    let renderer: any = null;
     let frameId = 0;
     let observer: ResizeObserver | null = null;
 
@@ -196,179 +196,121 @@ export function Loginy() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#0F172A] text-[#E5E1E4]">
-      {/* Three.js background */}
-      <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 h-full w-full opacity-25" />
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0F172A]/60 via-[#0f172a]/80 to-[#090b12]" />
-      <div className="scanline" />
-
+      <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 h-full w-full opacity-30" />
+      <div className="absolute inset-0 bg-linear-to-br from-transparent via-[#0f172a]/90 to-[#090b12]" />
       <div className="relative flex min-h-screen">
-
-        {/* LEFT — branding panel */}
-        <div className="hidden lg:flex w-[45%] flex-col justify-between px-16 py-12">
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.4em] text-[#06B6D4]/50">TACTICAL MANAGEMENT SYSTEM</p>
-          </div>
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-[5rem] font-black uppercase leading-none tracking-[0.1em] text-[#74f5ff]"
-                style={{ textShadow: "0 0 40px rgba(116,245,255,0.25)" }}>
-                SEMTEX
-              </h1>
-              <div className="mt-4 h-px w-20 bg-gradient-to-r from-[#06B6D4]/60 to-transparent" />
+        <main className="flex flex-1 items-center justify-center px-6 py-10">
+          <div className="relative z-10 flex w-full max-w-4xl flex-col items-center gap-6">
+            <div className="scanline" />
+            <div className="text-center space-y-3">
+              <h2 className="text-[24px] uppercase tracking-[0.2em] text-[#F97316]">CRITICAL STATE</h2>
             </div>
-            <p className="max-w-xs text-[13px] leading-relaxed text-[#b9cacb]/70">
-              Plataforma de transferencia segura y auditoría de documentos financieros para equipos corporativos.
-            </p>
-            <div className="space-y-3 pt-2">
-              {[
-                { icon: "⬢", label: "Transferencia cifrada de documentos" },
-                { icon: "⚖", label: "Auditoría y trazabilidad completa" },
-                { icon: "👥", label: "Control de acceso por rol (RBAC)" },
-              ].map((f) => (
-                <div key={f.label} className="flex items-center gap-3">
-                  <span className="text-[#06B6D4]/40 text-xs">{f.icon}</span>
-                  <span className="text-[11px] text-[#3a494b]">{f.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div>
-            <p className="text-[9px] uppercase tracking-[0.3em] text-[#3a494b]">v2.0 · CRITICAL STATE</p>
-          </div>
-        </div>
-
-        {/* RIGHT — form panel */}
-        <div className="flex flex-1 flex-col items-center justify-center px-10 py-12">
-          <div className="w-full max-w-[560px] space-y-6">
-
-            {/* Mobile-only brand */}
-            <div className="lg:hidden text-center mb-2">
-              <h1 className="text-[2.5rem] font-black uppercase tracking-[0.15em] text-[#74f5ff]">SEMTEX</h1>
-              <p className="mt-1 text-[10px] uppercase tracking-[0.3em] text-[#3a494b]">CRITICAL STATE</p>
-            </div>
-
-            {/* Header */}
-            <div className="text-center">
-              <h2 className="text-[16px] uppercase tracking-[0.25em] text-[#F97316]">
-                {isLogin ? "SYSTEM LOGIN" : "NODE REGISTRATION"}
-              </h2>
-              <p className="mt-1.5 text-[11px] tracking-[0.2em] text-[#3a494b]">AUTHENTICATION REQUIRED</p>
-            </div>
-
-            {/* Toggle */}
-            <div className="flex justify-center">
+            <div className="tactical-switch-container z-20">
               <button
                 type="button"
                 onClick={() => setIsLogin((value) => !value)}
-                className="relative w-52 h-14 overflow-hidden rounded-2xl border border-[#3a494b]/60 bg-[#0e0e10]/80 p-1 transition-transform duration-200 hover:scale-[0.99] hover:border-[#3a494b]"
+                className="group relative w-48 h-16 overflow-hidden rounded-3xl bg-[rgba(15,23,42,0.7)] p-1 transition-transform duration-200 hover:scale-[0.99]"
               >
-                <div className="absolute inset-0 flex justify-between px-5 items-center text-[10px] uppercase tracking-[0.3em] z-10">
-                  <span className={isLogin ? "text-[#22d3ee]/60 font-semibold" : "text-[#22d3ee] font-extrabold"}>REGISTER</span>
-                  <span className={isLogin ? "text-[#fb923c] font-extrabold" : "text-[#fb923c]/60 font-semibold"}>LOGIN</span>
+                <div className="absolute inset-0 flex justify-between px-4 items-center text-[11px] uppercase tracking-[0.3em] z-10">
+                  <span className={isLogin ? "text-[#22d3ee] font-bold" : "text-[#22d3ee] font-extrabold tracking-[0.35em]"}>REGISTER</span>
+                  <span className={isLogin ? "text-[#fb923c] font-extrabold tracking-[0.35em]" : "text-[#fb923c] font-bold"}>LOGIN</span>
                 </div>
+                <div className="absolute inset-0 rounded-3xl bg-[#0e0e10]/30" />
                 <div
-                  className="absolute left-1 top-1 bottom-1 w-[calc(50%-6px)] rounded-xl border transition-all duration-500 ease-in-out"
+                  className="absolute left-1 top-1 bottom-1 w-[calc(50%-10px)] rounded-3xl transition-all duration-500 ease-in-out"
                   style={activeIndicatorStyle}
                 />
               </button>
             </div>
-
-            {/* Alerts */}
             {error && (
-              <div className="rounded-xl border border-[#EF4444]/30 bg-[#EF4444]/8 px-4 py-2.5 text-[11px] text-[#EF4444]">
+              <div className="w-full max-w-md rounded-xl border border-[#EF4444]/40 bg-[#EF4444]/10 px-4 py-2 text-[11px] text-[#EF4444]">
                 {error}
               </div>
             )}
             {info && (
-              <div className="rounded-xl border border-[#22C55E]/30 bg-[#22C55E]/8 px-4 py-2.5 text-[11px] text-[#22C55E]">
+              <div className="w-full max-w-md rounded-xl border border-[#22C55E]/40 bg-[#22C55E]/10 px-4 py-2 text-[11px] text-[#22C55E]">
                 {info}
               </div>
             )}
-
-            {/* Form card */}
-            <div className="relative overflow-hidden rounded-2xl border border-[#3a494b]/50 bg-[#0e0e10]/70 backdrop-blur-sm"
-              style={{ minHeight: "440px", boxShadow: isLogin ? "0 0 0 1px rgba(249,115,22,0.08), 0 0 60px rgba(0,0,0,0.5)" : "0 0 0 1px rgba(6,182,212,0.08), 0 0 60px rgba(0,0,0,0.5)" }}>
-
-              {/* Top accent line */}
-              <div className="h-px w-full" style={{ background: isLogin ? "linear-gradient(to right, transparent, rgba(249,115,22,0.4), transparent)" : "linear-gradient(to right, transparent, rgba(6,182,212,0.4), transparent)" }} />
-
-              {/* Register form */}
-              <div className={`absolute inset-0 flex flex-col justify-center p-8 transition-all duration-500 ${isLogin ? "opacity-0 -translate-y-3 pointer-events-none" : "opacity-100 translate-y-0"}`}>
-                <div className="space-y-5">
-                  <div className="space-y-1.5">
-                    <label className="block text-[11px] uppercase tracking-[0.22em] text-[#b9cacb]/80">FULL NAME</label>
+            <div className="w-full max-w-md relative min-h-80">
+              <div className={`absolute inset-0 rounded-[30px] bg-[#201f21]/90 p-6 shadow-[0_0_50px_rgba(0,0,0,0.35)] transition-all duration-500 ${isLogin ? "opacity-0 translate-y-8 pointer-events-none" : "opacity-100 translate-y-0"}`}>
+                <div className="border-b border-[#3a494b] pb-3">
+                  <h3 className="text-[11px] uppercase tracking-[0.2em] text-[#06B6D4]">NODE REGISTRATION</h3>
+                </div>
+                <div className="space-y-3 pt-3">
+                  <div className="space-y-1">
+                    <label className="block text-[10px] uppercase tracking-[0.22em] text-[#b9cacb]">FULL NAME</label>
                     <input
                       type="text"
-                      placeholder="John Doe"
+                      placeholder="JOHN DOE"
                       value={regName}
                       onChange={(e) => setRegName(e.target.value)}
-                      className="w-full rounded-lg border border-[#3a494b]/60 bg-[#131315] px-4 py-3 text-sm text-[#e5e1e4] outline-none transition-all placeholder:text-[#3a494b] focus:border-[#06b6d4]/60 focus:shadow-[0_0_14px_rgba(6,182,212,0.18)]"
+                      className="w-full rounded-xl border border-[#3a494b] bg-[#0e0e10] px-3 py-2 text-xs text-[#e5e1e4] outline-none transition focus:border-[#06b6d4] focus:shadow-[0_0_10px_rgba(6,182,212,0.3)]"
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="block text-[11px] uppercase tracking-[0.22em] text-[#b9cacb]/80">CORPORATE EMAIL</label>
+                  <div className="space-y-1">
+                    <label className="block text-[10px] uppercase tracking-[0.22em] text-[#b9cacb]">CORPORATE EMAIL</label>
                     <input
                       type="email"
-                      placeholder="user@semtex.core"
+                      placeholder="USER@SEMTEX.CORE"
                       value={regEmail}
                       onChange={(e) => setRegEmail(e.target.value)}
-                      className="w-full rounded-lg border border-[#3a494b]/60 bg-[#131315] px-4 py-3 text-sm text-[#e5e1e4] outline-none transition-all placeholder:text-[#3a494b] focus:border-[#06b6d4]/60 focus:shadow-[0_0_14px_rgba(6,182,212,0.18)]"
+                      className="w-full rounded-xl border border-[#3a494b] bg-[#0e0e10] px-3 py-2 text-xs text-[#e5e1e4] outline-none transition focus:border-[#06b6d4] focus:shadow-[0_0_10px_rgba(6,182,212,0.3)]"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="block text-[11px] uppercase tracking-[0.22em] text-[#b9cacb]/80">PASSWORD</label>
-                      <input
-                        type="password"
-                        placeholder="••••••••"
-                        value={regPassword}
-                        onChange={(e) => setRegPassword(e.target.value)}
-                        className="w-full rounded-lg border border-[#3a494b]/60 bg-[#131315] px-4 py-3 text-sm text-[#e5e1e4] outline-none transition-all placeholder:text-[#3a494b] focus:border-[#06b6d4]/60 focus:shadow-[0_0_14px_rgba(6,182,212,0.18)]"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="block text-[11px] uppercase tracking-[0.22em] text-[#b9cacb]/80">CONFIRM</label>
-                      <input
-                        type="password"
-                        placeholder="••••••••"
-                        value={regConfirm}
-                        onChange={(e) => setRegConfirm(e.target.value)}
-                        className="w-full rounded-lg border border-[#3a494b]/60 bg-[#131315] px-4 py-3 text-sm text-[#e5e1e4] outline-none transition-all placeholder:text-[#3a494b] focus:border-[#06b6d4]/60 focus:shadow-[0_0_14px_rgba(6,182,212,0.18)]"
-                      />
-                    </div>
+                  <div className="space-y-1">
+                    <label className="block text-[10px] uppercase tracking-[0.22em] text-[#b9cacb]">ACCESS PASSWORD</label>
+                    <input
+                      type="password"
+                      placeholder="••••••••"
+                      value={regPassword}
+                      onChange={(e) => setRegPassword(e.target.value)}
+                      className="w-full rounded-xl border border-[#3a494b] bg-[#0e0e10] px-3 py-2 text-xs text-[#e5e1e4] outline-none transition focus:border-[#06b6d4] focus:shadow-[0_0_10px_rgba(6,182,212,0.3)]"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-[10px] uppercase tracking-[0.22em] text-[#b9cacb]">CONFIRM PASSWORD</label>
+                    <input
+                      type="password"
+                      placeholder="••••••••"
+                      value={regConfirm}
+                      onChange={(e) => setRegConfirm(e.target.value)}
+                      className="w-full rounded-xl border border-[#3a494b] bg-[#0e0e10] px-3 py-2 text-xs text-[#e5e1e4] outline-none transition focus:border-[#06b6d4] focus:shadow-[0_0_10px_rgba(6,182,212,0.3)]"
+                    />
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={handleRegister}
                   disabled={loading}
-                  className="mt-6 w-full rounded-lg bg-[#06B6D4] py-3.5 text-sm font-bold uppercase tracking-[0.25em] text-[#0F172A] transition-all hover:brightness-110 active:scale-[0.98] shadow-[0_0_24px_rgba(6,182,212,0.3)] disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="mt-6 w-full rounded-xl bg-[#06B6D4] py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#0F172A] transition hover:brightness-110 active:scale-[0.98] shadow-[0_0_15px_rgba(6,182,212,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? "CREATING NODE..." : "REGISTER NODE"}
+                  {loading ? "CREANDO..." : "REGISTER NODE"}
                 </button>
               </div>
-
-              {/* Login form */}
-              <div className={`absolute inset-0 flex flex-col justify-center p-8 transition-all duration-500 ${isLogin ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3 pointer-events-none"}`}>
-                <div className="space-y-5">
-                  <div className="space-y-1.5">
-                    <label className="block text-[11px] uppercase tracking-[0.22em] text-[#b9cacb]/80">CORPORATE EMAIL</label>
+              <div className={`absolute inset-0 rounded-[30px] bg-[#201f21]/90 p-6 shadow-[0_0_50px_rgba(0,0,0,0.35)] transition-all duration-500 ${isLogin ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8 pointer-events-none"}`}>
+                <div className="border-b border-[#3a494b] pb-3">
+                  <h3 className="text-[11px] uppercase tracking-[0.2em] text-[#F97316]">SYSTEM LOGIN</h3>
+                </div>
+                <div className="space-y-3 pt-3">
+                  <div className="space-y-1">
+                    <label className="block text-[10px] uppercase tracking-[0.22em] text-[#b9cacb]">CORPORATE EMAIL</label>
                     <input
                       type="email"
-                      placeholder="user@semtex.core"
+                      placeholder="USER@SEMTEX.CORE"
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
-                      className="w-full rounded-lg border border-[#3a494b]/60 bg-[#131315] px-4 py-3 text-sm text-[#e5e1e4] outline-none transition-all placeholder:text-[#3a494b] focus:border-[#F97316]/60 focus:shadow-[0_0_14px_rgba(249,115,22,0.18)]"
+                      className="w-full rounded-xl border border-[#3a494b] bg-[#0e0e10] px-3 py-2 text-xs text-[#e5e1e4] outline-none transition focus:border-[#F97316] focus:shadow-[0_0_10px_rgba(249,115,22,0.3)]"
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="block text-[11px] uppercase tracking-[0.22em] text-[#b9cacb]/80">ACCESS PASSWORD</label>
+                  <div className="space-y-1">
+                    <label className="block text-[10px] uppercase tracking-[0.22em] text-[#b9cacb]">ACCESS PASSWORD</label>
                     <input
                       type="password"
                       placeholder="••••••••"
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
-                      className="w-full rounded-lg border border-[#3a494b]/60 bg-[#131315] px-4 py-3 text-sm text-[#e5e1e4] outline-none transition-all placeholder:text-[#3a494b] focus:border-[#F97316]/60 focus:shadow-[0_0_14px_rgba(249,115,22,0.18)]"
+                      className="w-full rounded-xl border border-[#3a494b] bg-[#0e0e10] px-3 py-2 text-xs text-[#e5e1e4] outline-none transition focus:border-[#F97316] focus:shadow-[0_0_10px_rgba(249,115,22,0.3)]"
                     />
                   </div>
                 </div>
@@ -376,18 +318,15 @@ export function Loginy() {
                   type="button"
                   onClick={handleLogin}
                   disabled={loading}
-                  className="mt-6 w-full rounded-lg bg-[#F97316] py-3.5 text-sm font-bold uppercase tracking-[0.25em] text-white transition-all hover:brightness-110 active:scale-[0.98] shadow-[0_0_24px_rgba(249,115,22,0.3)] disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="mt-6 w-full rounded-xl bg-[#F97316] py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:brightness-110 active:scale-[0.98] shadow-[0_0_15px_rgba(249,115,22,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? "VERIFYING..." : "AUTHORIZE ACCESS"}
+                  {loading ? "VERIFICANDO..." : "AUTHORIZE ACCESS"}
                 </button>
               </div>
-
             </div>
           </div>
-        </div>
-
+        </main>
       </div>
-
       <style jsx global>{`
         .scanline {
           position: absolute;
@@ -395,8 +334,8 @@ export function Loginy() {
           left: 0;
           width: 100%;
           height: 2px;
-          background: rgba(6, 182, 212, 0.08);
-          animation: scan 5s linear infinite;
+          background: rgba(6, 182, 212, 0.1);
+          animation: scan 4s linear infinite;
           pointer-events: none;
           z-index: 5;
         }

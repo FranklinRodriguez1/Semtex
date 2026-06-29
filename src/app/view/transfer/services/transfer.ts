@@ -1,35 +1,52 @@
-import { apiFetch } from '@/lib/api';
+import type { Transaction, UploadProgress, UploadStatus } from '../types';
 
-/** Documento tal como lo devuelve el backend (`/api/documents`). */
-export interface BackendDocument {
-  id: string;
-  name: string;
-  storagePath: string;
-  mimeType: string;
-  fileSizeBytes: number;
-  organizationId: string;
-  uploadedBy: string;
-  createdAt: string;
+const API_BASE = '/api/transfer';
+
+export interface UploadResponse {
+  transactionId: string;
+  status: UploadStatus;
 }
 
-/** Sube un Excel/CSV. El backend ingiere las filas como registros financieros. */
-export async function uploadDocument(file: File): Promise<BackendDocument> {
-  const form = new FormData();
-  form.append('file', file);
-  return apiFetch<BackendDocument>('/api/documents', {
-    method: 'POST',
-    body: form,
-  });
+export interface UploadCallbacks {
+  onProgress: (progress: UploadProgress) => void;
+  onSuccess: (transaction: Transaction) => void;
+  onError: (error: string) => void;
 }
 
-/** Lista los documentos de la organización del token (orden createdAt DESC). */
-export async function listDocuments(): Promise<BackendDocument[]> {
-  return apiFetch<BackendDocument[]>('/api/documents');
-}
+export async function uploadFile(
+  file: File,
+  sender: string,
+  callbacks: UploadCallbacks,
+  signal?: AbortSignal,
+): Promise<void> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('sender', sender);
 
-/** Formatea bytes a una unidad legible (KB/MB). */
-export function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  try {
+    const response = await fetch(`${API_BASE}/upload`, {
+      method: 'POST',
+      body: formData,
+      signal,
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      callbacks.onError(errorBody || `Upload failed with status ${response.status}`);
+      return;
+    }
+
+    const result: UploadResponse = await response.json();
+    const transaction: Transaction = {
+      id: result.transactionId,
+      filename: file.name,
+      sender,
+      status: result.status === 'completed' ? 'COMPLETED' : 'UPLOADING',
+      timestamp: new Date().toISOString(),
+    };
+    callbacks.onSuccess(transaction);
+  } catch (err) {
+    if ((err as Error).name === 'AbortError') return;
+    callbacks.onError((err as Error).message || 'Network error');
+  }
 }

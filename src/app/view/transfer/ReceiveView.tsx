@@ -1,18 +1,32 @@
 'use client';
 
-import type { useDocuments } from './hooks/useTransfer';
-import { formatFileSize } from './services/transfer';
+import { useState } from 'react';
 
 interface ReceiveViewProps {
-  docs: ReturnType<typeof useDocuments>;
+  files?: File[];
+  onAction?: (action: string, data?: unknown) => void;
 }
+
+interface AvailableDocument {
+  id: string;
+  filename: string;
+  sender: string;
+  size: string;
+  timestamp: string;
+  status: 'available' | 'downloading' | 'downloaded';
+}
+
+const MOCK_DOCUMENTS: AvailableDocument[] = [
+  { id: '1', filename: 'REPORTE_Q1_2026.xlsx', sender: 'ANALYST@SECTOR7', size: '2.4 MB', timestamp: new Date().toISOString(), status: 'available' },
+  { id: '2', filename: 'ORDEN_OPERATIVA_42.pdf', sender: 'COMANDO@CENTRAL', size: '1.1 MB', timestamp: new Date(Date.now() - 3600000).toISOString(), status: 'available' },
+  { id: '3', filename: 'MANIFIESTO_CARGA.zip', sender: 'LOGISTICA@SECTOR3', size: '14.7 MB', timestamp: new Date(Date.now() - 7200000).toISOString(), status: 'downloaded' },
+];
 
 function formatTimestamp(ts: string) {
   try {
     return new Date(ts).toLocaleString('es-MX', {
       day: '2-digit',
       month: '2-digit',
-      year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
       hour12: false,
@@ -22,8 +36,8 @@ function formatTimestamp(ts: string) {
   }
 }
 
-export function ReceiveView({ docs }: ReceiveViewProps) {
-  const { documents, loadingList, listError, refresh } = docs;
+export function ReceiveView(_props: ReceiveViewProps) {
+  const [documents] = useState<AvailableDocument[]>(MOCK_DOCUMENTS);
 
   return (
     <>
@@ -36,33 +50,26 @@ export function ReceiveView({ docs }: ReceiveViewProps) {
       <div className="flex justify-between items-end border-b border-[#3a494b] pb-4 mb-6">
         <div>
           <h1 className="text-[14px] uppercase tracking-[0.2em] text-[#F97316]">
-            Mis documentos
+            Receive Inbox Protocol
           </h1>
           <p className="text-[10px] text-[#3a494b] mt-1 tracking-[0.15em]">
-            DOCUMENTOS INGERIDOS DE MI EMPRESA
+            SECURE_P2P_INBOX_V2.0
           </p>
         </div>
-        <button
-          onClick={() => void refresh()}
-          className="text-[10px] uppercase tracking-[0.2em] text-[#F97316] border border-[#F97316]/40 px-3 py-1 transition-all duration-200 hover:bg-[#F97316]/10"
-        >
-          ↻ Refrescar
-        </button>
+        <div className="text-right text-[10px] uppercase tracking-[0.2em] text-[#b9cacb] font-mono">
+          <p>AES-256-GCM / RSA-4096</p>
+        </div>
       </div>
 
-      {/* Documents panel */}
+      {/* Available documents panel */}
       <div className="border border-[#3a494b] bg-[#0e0e10]/30 mb-6">
         <div className="px-4 py-2 border-b border-[#3a494b] text-[10px] uppercase tracking-[0.2em] text-[#b9cacb]">
-          Documentos ({documents.length})
+          Documentos Disponibles
         </div>
         <div className="divide-y divide-[#3a494b]/40">
-          {loadingList ? (
-            <div className="p-4 text-[10px] text-[#3a494b] italic">Cargando documentos…</div>
-          ) : listError ? (
-            <div className="p-4 text-[11px] text-[#EF4444]">{listError}</div>
-          ) : documents.length === 0 ? (
+          {documents.length === 0 ? (
             <div className="p-4 text-[10px] text-[#3a494b] italic">
-              Aún no has subido documentos. Ve a &quot;Enviar&quot; para subir tu primer Excel/CSV.
+              No hay documentos disponibles para descarga...
             </div>
           ) : (
             documents.map((doc) => (
@@ -71,17 +78,36 @@ export function ReceiveView({ docs }: ReceiveViewProps) {
                 className="flex items-center justify-between px-4 py-3 transition-all duration-200 hover:bg-[#1a2d30]/30"
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-[12px] text-[#E5E1E4] font-mono truncate">{doc.name}</p>
+                  <p className="text-[12px] text-[#E5E1E4] font-mono truncate">{doc.filename}</p>
                   <p className="text-[9px] text-[#3a494b] mt-0.5">
-                    {formatFileSize(doc.fileSizeBytes)} &middot; {formatTimestamp(doc.createdAt)}
+                    {doc.sender} &middot; {doc.size} &middot; {formatTimestamp(doc.timestamp)}
                   </p>
                 </div>
-                <span className="ml-4 text-[9px] uppercase tracking-[0.15em] text-[#22C55E]">
-                  ✓ Ingerido
-                </span>
+                <div className="ml-4 flex">
+                  {doc.status === 'available' && (
+                    <button className="text-[10px] uppercase tracking-[0.15em] text-[#F97316] border border-[#F97316]/40 px-3 py-1 transition-all duration-200 hover:bg-[#F97316]/10 hover:shadow-[0_0_10px_rgba(249,115,22,0.2)]">
+                      DESCARGAR
+                    </button>
+                  )}
+                  {doc.status === 'downloading' && (
+                    <span className="text-[10px] text-[#F97316] italic">Descargando...</span>
+                  )}
+                  {doc.status === 'downloaded' && (
+                    <span className="text-[10px] text-[#22C55E]">✓ Descargado</span>
+                  )}
+                </div>
               </div>
             ))
           )}
+        </div>
+      </div>
+
+      {/* Auxiliary Info */}
+      <div className="border border-[#3a494b] bg-[#0e0e10]/30 p-4">
+        <p className="text-[9px] uppercase tracking-[0.2em] text-[#3a494b] mb-2">Decryption Status</p>
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-[#F97316] shadow-[0_0_6px_rgba(249,115,22,0.5)]" />
+          <span className="text-[10px] text-[#b9cacb]">Clave de descifrado activa — canal seguro establecido</span>
         </div>
       </div>
     </>
