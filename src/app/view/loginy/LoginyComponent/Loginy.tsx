@@ -1,11 +1,81 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import * as THREE from "three";
+import { supabase } from "@/lib/supabase";
+
+const AFTER_AUTH_ROUTE = "/view/transfer";
 
 export function Loginy() {
+  const router = useRouter();
   const [isLogin, setIsLogin] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // Estado de los formularios
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
+
+  const [regName, setRegName] = useState("");
+  const [regEmail, setRegEmail] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+  const [regConfirm, setRegConfirm] = useState("");
+
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+
+  async function handleRegister() {
+    setError(null);
+    setInfo(null);
+    if (regPassword !== regConfirm) {
+      setError("Las contraseñas no coinciden.");
+      return;
+    }
+    if (regPassword.length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: regEmail.trim(),
+        password: regPassword,
+        options: { data: { full_name: regName, company_name: regName } },
+      });
+      if (signUpError) throw signUpError;
+      if (data.session) {
+        // Confirmación de email desactivada: sesión inmediata.
+        router.push(AFTER_AUTH_ROUTE);
+      } else {
+        // Confirmación de email activada: hay que verificar el correo.
+        setInfo("Cuenta creada. Revisa tu correo para confirmar y luego inicia sesión.");
+        setIsLogin(true);
+      }
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleLogin() {
+    setError(null);
+    setInfo(null);
+    setLoading(true);
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: loginEmail.trim(),
+        password: loginPassword,
+      });
+      if (signInError) throw signInError;
+      router.push(AFTER_AUTH_ROUTE);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -152,6 +222,16 @@ export function Loginy() {
                 />
               </button>
             </div>
+            {error && (
+              <div className="w-full max-w-md rounded-xl border border-[#EF4444]/40 bg-[#EF4444]/10 px-4 py-2 text-[11px] text-[#EF4444]">
+                {error}
+              </div>
+            )}
+            {info && (
+              <div className="w-full max-w-md rounded-xl border border-[#22C55E]/40 bg-[#22C55E]/10 px-4 py-2 text-[11px] text-[#22C55E]">
+                {info}
+              </div>
+            )}
             <div className="w-full max-w-md relative min-h-80">
               <div className={`absolute inset-0 rounded-[30px] bg-[#201f21]/90 p-6 shadow-[0_0_50px_rgba(0,0,0,0.35)] transition-all duration-500 ${isLogin ? "opacity-0 translate-y-8 pointer-events-none" : "opacity-100 translate-y-0"}`}>
                 <div className="border-b border-[#3a494b] pb-3">
@@ -163,6 +243,8 @@ export function Loginy() {
                     <input
                       type="text"
                       placeholder="JOHN DOE"
+                      value={regName}
+                      onChange={(e) => setRegName(e.target.value)}
                       className="w-full rounded-xl border border-[#3a494b] bg-[#0e0e10] px-3 py-2 text-xs text-[#e5e1e4] outline-none transition focus:border-[#06b6d4] focus:shadow-[0_0_10px_rgba(6,182,212,0.3)]"
                     />
                   </div>
@@ -171,6 +253,8 @@ export function Loginy() {
                     <input
                       type="email"
                       placeholder="USER@SEMTEX.CORE"
+                      value={regEmail}
+                      onChange={(e) => setRegEmail(e.target.value)}
                       className="w-full rounded-xl border border-[#3a494b] bg-[#0e0e10] px-3 py-2 text-xs text-[#e5e1e4] outline-none transition focus:border-[#06b6d4] focus:shadow-[0_0_10px_rgba(6,182,212,0.3)]"
                     />
                   </div>
@@ -179,6 +263,8 @@ export function Loginy() {
                     <input
                       type="password"
                       placeholder="••••••••"
+                      value={regPassword}
+                      onChange={(e) => setRegPassword(e.target.value)}
                       className="w-full rounded-xl border border-[#3a494b] bg-[#0e0e10] px-3 py-2 text-xs text-[#e5e1e4] outline-none transition focus:border-[#06b6d4] focus:shadow-[0_0_10px_rgba(6,182,212,0.3)]"
                     />
                   </div>
@@ -187,12 +273,19 @@ export function Loginy() {
                     <input
                       type="password"
                       placeholder="••••••••"
+                      value={regConfirm}
+                      onChange={(e) => setRegConfirm(e.target.value)}
                       className="w-full rounded-xl border border-[#3a494b] bg-[#0e0e10] px-3 py-2 text-xs text-[#e5e1e4] outline-none transition focus:border-[#06b6d4] focus:shadow-[0_0_10px_rgba(6,182,212,0.3)]"
                     />
                   </div>
                 </div>
-                <button className="mt-6 w-full rounded-xl bg-[#06B6D4] py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#0F172A] transition hover:brightness-110 active:scale-[0.98] shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-                  REGISTER NODE
+                <button
+                  type="button"
+                  onClick={handleRegister}
+                  disabled={loading}
+                  className="mt-6 w-full rounded-xl bg-[#06B6D4] py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#0F172A] transition hover:brightness-110 active:scale-[0.98] shadow-[0_0_15px_rgba(6,182,212,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? "CREANDO..." : "REGISTER NODE"}
                 </button>
               </div>
               <div className={`absolute inset-0 rounded-[30px] bg-[#201f21]/90 p-6 shadow-[0_0_50px_rgba(0,0,0,0.35)] transition-all duration-500 ${isLogin ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8 pointer-events-none"}`}>
@@ -205,6 +298,8 @@ export function Loginy() {
                     <input
                       type="email"
                       placeholder="USER@SEMTEX.CORE"
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
                       className="w-full rounded-xl border border-[#3a494b] bg-[#0e0e10] px-3 py-2 text-xs text-[#e5e1e4] outline-none transition focus:border-[#F97316] focus:shadow-[0_0_10px_rgba(249,115,22,0.3)]"
                     />
                   </div>
@@ -213,12 +308,19 @@ export function Loginy() {
                     <input
                       type="password"
                       placeholder="••••••••"
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
                       className="w-full rounded-xl border border-[#3a494b] bg-[#0e0e10] px-3 py-2 text-xs text-[#e5e1e4] outline-none transition focus:border-[#F97316] focus:shadow-[0_0_10px_rgba(249,115,22,0.3)]"
                     />
                   </div>
                 </div>
-                <button className="mt-6 w-full rounded-xl bg-[#F97316] py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:brightness-110 active:scale-[0.98] shadow-[0_0_15px_rgba(249,115,22,0.3)]">
-                  AUTHORIZE ACCESS
+                <button
+                  type="button"
+                  onClick={handleLogin}
+                  disabled={loading}
+                  className="mt-6 w-full rounded-xl bg-[#F97316] py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:brightness-110 active:scale-[0.98] shadow-[0_0_15px_rgba(249,115,22,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? "VERIFICANDO..." : "AUTHORIZE ACCESS"}
                 </button>
               </div>
             </div>
