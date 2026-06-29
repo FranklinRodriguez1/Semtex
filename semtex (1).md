@@ -1,53 +1,173 @@
-# Semtex - Documento de Especificaciones Técnicas y de Producto (MVP)
+# Semtex - Documento funcional del producto
 
----
+## 1. Vision general
 
-## 1. Propósito y Objetivos
-* **Propósito:** Crear un SaaS de automatización inteligente (Copiloto Administrativo y Financiero) que permita a las PyMEs semi-automatizar tareas repetitivas de análisis de datos y comunicación mediante lenguaje natural, garantizando privacidad absoluta de sus datos[cite: 2, 3].
-* **Objetivo General:** Desarrollar un agente autónomo de IA capaz de interpretar archivos estructurados (Excel) y ejecutar acciones en el entorno real (envío de correos) bajo una arquitectura multi-inquilino segura[cite: 2, 3].
-* **Objetivos Técnicos:** 
-  * Procesar y estructurar datos dinámicos de hojas de cálculo sin perder consistencia relacional[cite: 2, 3].
-  * Implementar *Function Calling* para orquestar servicios externos desde un chat de IA[cite: 2, 3].
-  * Validar el uso de modelos de lenguaje de código abierto locales para asegurar la confidencialidad de la información[cite: 2, 3].
+Semtex es una aplicacion tactica para operar una experiencia de autenticacion, acceso por roles y gestion interna de módulos corporativos.
 
----
+La app debe:
 
-## 2. ¿Qué hace la app? (Funciones del MVP)
-* **Ingesta:** Carga y lectura de archivos Excel (`.xlsx`, `.xls`) y `.csv` mediante interfaz drag-and-drop[cite: 2, 3].
-* **Análisis:** Consultas en lenguaje natural sobre balances, ingresos, egresos y comparativas financieras temporales[cite: 2, 3].
-* **Automatización:** Redacción y envío automático de correos corporativos utilizando APIs externas (Resend / Gmail API)[cite: 2, 3].
-* **Agente IA:** Orquestación mediante *Function Calling* para extraer parámetros del chat y ejecutar acciones autónomamente[cite: 2, 3].
-* **Seguridad SaaS:** Aislamiento multi-inquilino estricto por empresa con control de acceso basado en roles (Admin, Operador, Auditor)[cite: 2, 3].
-* **Auditoría:** Registro histórico persistente de conversaciones y logs de las acciones tomadas por el agente[cite: 2, 3].
+- autenticar usuarios con Supabase
+- mantener la sesion activa en el navegador
+- redirigir usuarios no autenticados al login
+- exponer vistas protegidas solo cuando hay sesion valida
+- mostrar informacion basica del usuario actual
+- separar la logica por modulo en `services`
 
----
+## 2. Comportamiento esperado de toda la app
 
-## 3. ¿Qué recibe la app? (Inputs del Sistema)
-* **Archivos de Datos:** Documentos contables y financieros físicos subidos por el usuario[cite: 2, 3].
-* **Prompts de Usuario:** Mensajes e instrucciones de texto ingresados en la interfaz de chat (ej. *"¿Cuál es la ganancia de mayo?"*)[cite: 2, 3].
-* **Contexto de Sesión:** Metadatos de autenticación del usuario (`user_id`) y de su empresa (`organization_id`) vía tokens JWT[cite: 2, 3].
-* **Credenciales de Integración:** API Keys o tokens OAuth configurados para servicios externos de mensajería[cite: 2, 3].
+### 2.1 Autenticacion
 
----
+- El usuario inicia sesion o se registra en `/view/loginy`.
+- La app obtiene un access token JWT desde Supabase.
+- Ese token se usa para validar requests internas.
+- Si no hay sesion, no se debe permitir el acceso a vistas privadas.
 
-## 4. Arquitectura y Estrategia de Base de Datos
-* **Stack Tecnológico:** Next.js (App Router, TypeScript), Tailwind CSS (UI táctica/modo oscuro), Supabase y Prisma ORM[cite: 2, 3].
-* **Enfoque de Base de Datos:** **Relacional (PostgreSQL)** para asegurar precisión matemática absoluta (Consistencia ACID) y aislamiento nativo por empresa mediante Políticas de Seguridad a Nivel de Fila (**RLS**)[cite: 2, 3].
-* **Flexibilidad de Datos:** Se implementa el tipo **`JSONB`** en la tabla de registros financieros para almacenar las celdas y filas de los Excels dinámicos sin romper la estructura rígida de la base de datos core[cite: 2, 3].
-* **Entidades Prisma Core:** `Organization`, `User` (con roles RBAC), `Document` (metadatos del storage), `FinancialRecord` (contenido JSONB) y `ChatMessage`[cite: 2, 3].
+### 2.2 Redireccion
 
----
+- Si el usuario no esta autenticado y entra a una ruta privada, debe volver a `/view/loginy`.
+- Si ya esta autenticado y entra al login, debe ser llevado a `/view/transfer`.
 
-## 5. Autenticación y Control de Accesos (RBAC)
-* **Autenticación:** Delegada en **Supabase Auth** con tokens JWT validados en API Routes[cite: 2, 3].
-* **Validación de Roles:**
-  * **Administrador (Admin):** Control total de usuarios, APIs de correo, eliminación de archivos y lectura/escritura general[cite: 2, 3].
-  * **Operador (Auxiliar):** Carga de Excels, consultas al chat con Semtex y ordenamiento de envío de correos[cite: 2, 3].
-  * **Auditor (Invitado):** Solo lectura de reportes históricos y analíticas; sin permisos de carga o acción[cite: 2, 3].
+### 2.3 Contexto global
 
----
+- La app debe guardar en un contexto global:
+  - `id`
+  - `name`
+  - `email`
+  - `status`
+  - `isAuthenticated`
+- Ese contexto se usa para mostrar el usuario y tomar decisiones de navegacion.
 
-## 6. Viabilidad de IA Local (Ollama)
-* **Estrategia Técnica:** Conectar las API Routes de Next.js al endpoint local de **Ollama** (`http://localhost:11434`) montado en el servidor o VPS de la aplicación[cite: 2, 3].
-* **Modelos Recomendados:** **Llama 3 (8B / 8B.1)** o **Phi-3 (Medium/Mini)** por su alto rendimiento en español, lógica estructurada y soporte nativo para *Function Calling*[cite: 2, 3].
-* **Evaluación de Viabilidad:** **Altamente viable.** Elimina costos variables por tokens y ofrece el mayor nivel de privacidad del mercado al no enviar datos financieros fuera de la infraestructura local, requiriendo únicamente un hardware con GPU dedicada para la inferencia[cite: 2, 3].
+### 2.4 Rutas protegidas
+
+Las rutas privadas actuales son:
+
+- `/view/transfer`
+- `/view/configuration`
+- `/view/team`
+- `/view/admin`
+
+La ruta publica principal de autenticacion es:
+
+- `/view/loginy`
+
+La ruta publica de entrada es:
+
+- `/`
+
+## 3. Funciones por modulo
+
+### 3.1 Home
+
+La vista principal:
+
+- muestra una esfera/escena visual con Three.js
+- contiene una barra de comando
+- usa iconos desde `public`
+- es una pantalla de entrada visual
+
+### 3.2 Loginy
+
+La vista de login:
+
+- permite registrar o iniciar sesion
+- usa Supabase Auth
+- redirige al usuario despues de autenticar
+- persiste la sesion para futuras visitas
+
+### 3.3 Transfer
+
+Debe permitir:
+
+- enviar informacion o archivos
+- cambiar entre modo enviar y recibir
+- mostrar acciones tacticas de transferencia
+
+### 3.4 Configuration
+
+Debe permitir:
+
+- ver integraciones
+- revisar roles
+- alternar entre modos de configuracion
+
+### 3.5 Team
+
+Debe permitir:
+
+- ver usuarios de la empresa
+- invitar empleados
+- mostrar rol y estado de cada usuario
+
+### 3.6 Admin
+
+Debe permitir:
+
+- crear una empresa nueva
+- crear el usuario admin inicial de esa empresa
+- usar una capa de servicios exclusiva del modulo
+
+## 4. Reglas de seguridad
+
+- El cliente solo debe mostrar UI.
+- La decision real de acceso debe depender de la sesion valida.
+- Las rutas API deben validar Bearer token.
+- Los modulos sensibles deben validar permisos en servidor.
+
+## 5. Servicios del proyecto
+
+Cada modulo debe tener su capa de servicios cuando tenga logica propia.
+
+Servicios actuales:
+
+- `src/app/view/admin/services/admin.ts`
+- `src/app/view/configuration/services/configuration.ts`
+- `src/app/view/transfer/services/transfer.ts`
+- `src/app/view/loginy/services` para logica del login
+- `src/app/view/team/services` para logica de usuarios
+
+## 6. Infraestructura
+
+### 6.1 Frontend
+
+- Next.js 16
+- React 19
+- TypeScript
+- Tailwind CSS
+
+### 6.2 Backend y auth
+
+- Supabase Auth para login y JWT
+- Supabase Admin solo en servidor
+- backend externo consumido con `NEXT_PUBLIC_API_URL`
+
+## 7. Variables de entorno
+
+Archivo:
+
+- `.env`
+
+Variables:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_API_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPERADMIN_EMAILS`
+
+## 8. Flujo esperado del sistema
+
+1. El usuario abre la app.
+2. Si no esta autenticado, va a login.
+3. Se autentica.
+4. La app valida la sesion y guarda datos basicos en contexto.
+5. El usuario entra a las vistas protegidas.
+6. Cada modulo usa su servicio para ejecutar la logica que le corresponde.
+7. Si cierra sesion, vuelve al login.
+
+## 9. Criterios de implementacion
+
+- No mezclar logica de negocio con componentes visuales.
+- No crear archivos extra si el modulo ya tiene carpeta de servicios.
+- Reutilizar el JWT de Supabase para requests internas.
+- Mantener la separacion por modulo.
+- Mantener la proteccion de rutas y no solo esconder componentes.

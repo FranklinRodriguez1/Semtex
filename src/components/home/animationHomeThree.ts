@@ -61,17 +61,29 @@ export function initializeThreeScene(containerId: string) {
   scene.add(core);
 
   let animationFrameId: number;
+  const introStart = performance.now();
+  const introDuration = 1200;
+
+  const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
+  const easeOutCubic = (value: number) => 1 - Math.pow(1 - value, 3);
 
   function animate() {
     animationFrameId = requestAnimationFrame(animate);
 
+    const introProgress = easeOutCubic(
+      clamp01((performance.now() - introStart) / introDuration),
+    );
     sphere.rotation.y += 0.002;
     sphere.rotation.x += 0.001;
     particlesMesh.rotation.y += 0.0005;
 
     const time = Date.now() * 0.001;
     const pulse = Math.sin(time) * 0.05 + 1;
-    sphere.scale.set(pulse, pulse, pulse);
+    const introScale = 0.02 + introProgress * 0.98;
+    sphere.scale.set(introScale * pulse, introScale * pulse, introScale * pulse);
+    sphere.material.opacity = 0.3 * introProgress;
+    core.material.opacity = 0.05 * introProgress;
+    particlesMesh.material.opacity = 0.6 * introProgress;
 
     renderer.render(scene, camera);
   }
