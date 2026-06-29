@@ -11,7 +11,14 @@ interface DropzoneAreaProps {
 const ACCEPTED_TYPES = {
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
   'application/vnd.ms-excel': ['.xls'],
+  'application/pdf': ['.pdf'],
+  'application/msword': ['.doc'],
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+  'application/vnd.ms-powerpoint': ['.ppt'],
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx'],
   'text/csv': ['.csv'],
+  'application/zip': ['.zip'],
+  'application/x-rar-compressed': ['.rar'],
 };
 
 export function DropzoneArea({ onFileSelect, disabled }: DropzoneAreaProps) {
@@ -58,10 +65,10 @@ export function DropzoneArea({ onFileSelect, disabled }: DropzoneAreaProps) {
           isDragActive ? 'text-[#00E5FF]' : 'text-[#00E5FF]/80'
         }`}
       >
-        {isDragActive ? 'SOLTAR ARCHIVO AHORA' : 'SOLTAR EXCEL O CSV PARA SUBIR'}
+        {isDragActive ? 'SOLTAR ARCHIVO AHORA' : 'SOLTAR DOCUMENTOS PARA CIFRADO'}
       </p>
       <p className="text-[9px] text-[#3a494b] mt-2 tracking-[0.15em]">
-        O SELECCIONAR DESDE EL SISTEMA LOCAL · .XLSX .XLS .CSV
+        O SELECCIONAR DESDE EL SISTEMA LOCAL
       </p>
     </div>
   );

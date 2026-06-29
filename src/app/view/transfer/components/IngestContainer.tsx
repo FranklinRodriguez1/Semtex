@@ -1,16 +1,11 @@
 'use client';
 
-import { useTransfer } from './hooks/useTransfer';
-import { DropzoneArea } from './components/DropzoneArea';
-import { ProgressBar } from './components/ProgressBar';
-import { TransactionTable } from './components/TransactionTable';
+import { useTransfer } from '../hooks/useTransfer';
+import { DropzoneArea } from './DropzoneArea';
+import { ProgressBar } from './ProgressBar';
+import { TransactionTable } from './TransactionTable';
 
-interface SendViewProps {
-  files?: File[];
-  onAction?: (action: string, data?: unknown) => void;
-}
-
-export function SendView(_props: SendViewProps) {
+export function IngestContainer() {
   const { state, handleUpload, reset, dismissError } = useTransfer();
 
   const onFileSelect = (file: File) => {
@@ -19,7 +14,7 @@ export function SendView(_props: SendViewProps) {
   };
 
   return (
-    <>
+    <div className="relative w-full h-full bg-[#000000] border border-[#3a494b] p-6 text-[#E5E1E4] overflow-hidden">
       {/* Scanline */}
       <div className="absolute inset-0 z-50 pointer-events-none overflow-hidden">
         <div className="h-0.5 w-full bg-[#00E5FF]/20 animate-scan shadow-[0_0_10px_#00E5FF]" />
@@ -46,7 +41,7 @@ export function SendView(_props: SendViewProps) {
       {/* Error toast */}
       {state.error && (
         <div className="mb-4 animate-slide-up flex items-center justify-between bg-[#EF4444]/10 border border-[#EF4444]/30 px-4 py-2 text-[11px] text-[#EF4444]">
-          <span className="tracking-0.05em">ERROR: {state.error}</span>
+          <span className="tracking-[0.05em]">ERROR: {state.error}</span>
           <button
             onClick={dismissError}
             className="text-[#EF4444]/60 hover:text-[#EF4444] ml-4 transition-colors"
@@ -79,6 +74,6 @@ export function SendView(_props: SendViewProps) {
 
       {/* Transaction History */}
       <TransactionTable transactions={state.transactions} />
-    </>
+    </div>
   );
 }
