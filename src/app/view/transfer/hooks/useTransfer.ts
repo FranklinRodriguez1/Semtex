@@ -1,85 +1,88 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
-import type { Transaction, UploadProgress, TransferState } from '../types';
-import { uploadFile } from '../services/transfer';
+import { useState, useEffect, useCallback } from 'react';
+import {
+  listDocuments,
+  uploadDocument,
+  type BackendDocument,
+} from '../services/transfer';
 
-const INITIAL_STATE: TransferState = {
-  status: 'idle',
-  currentFile: null,
-  progress: { percentage: 0, bytesUploaded: 0, bytesTotal: 0 },
-  transactions: [],
-  error: null,
-};
+/**
+ * Estado compartido de documentos: lista (RECIBIR) + subida (ENVIAR).
+ * Tras subir con éxito, refresca la lista para que ambas vistas queden al día.
+ */
+export function useDocuments() {
+  const [documents, setDocuments] = useState<BackendDocument[]>([]);
+  const [loadingList, setLoadingList] = useState(true);
+  const [listError, setListError] = useState<string | null>(null);
 
-export function useTransfer() {
-  const [state, setState] = useState<TransferState>(INITIAL_STATE);
-  const abortRef = useRef<AbortController | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [lastUploaded, setLastUploaded] = useState<BackendDocument | null>(null);
 
-  const handleUpload = useCallback(async (file: File, sender: string) => {
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-
-    const totalBytes = file.size;
-    // Simulate progress via chunked reading until backend provides real progress
-    const simulateProgress = (() => {
-      let last = 0;
-      return setInterval(() => {
-        const next = Math.min(last + Math.random() * 15, 90);
-        last = next;
-        setState((prev) => ({
-          ...prev,
-          progress: {
-            percentage: Math.round(next),
-            bytesUploaded: Math.round((next / 100) * totalBytes),
-            bytesTotal: totalBytes,
-          },
-        }));
-        if (next >= 90) clearInterval(simulateProgress);
-      }, 400);
-    })();
-
-    setState((prev) => ({
-      ...prev,
-      status: 'uploading',
-      currentFile: file,
-      error: null,
-      progress: { percentage: 0, bytesUploaded: 0, bytesTotal: totalBytes },
-    }));
-
-    await uploadFile(file, sender, {
-      onProgress: (progress) => {
-        setState((prev) => ({ ...prev, progress }));
-      },
-      onSuccess: (transaction) => {
-        clearInterval(simulateProgress);
-        setState((prev) => ({
-          ...prev,
-          status: 'completed',
-          progress: { percentage: 100, bytesUploaded: totalBytes, bytesTotal: totalBytes },
-          transactions: [transaction, ...prev.transactions],
-        }));
-      },
-      onError: (error) => {
-        clearInterval(simulateProgress);
-        setState((prev) => ({
-          ...prev,
-          status: 'error',
-          error,
-        }));
-      },
-    }, controller.signal);
+  const refresh = useCallback(async () => {
+    try {
+      const data = await listDocuments();
+      setDocuments(data);
+      setListError(null);
+    } catch (err) {
+      setListError((err as Error).message);
+    } finally {
+      setLoadingList(false);
+    }
   }, []);
 
-  const reset = useCallback(() => {
-    abortRef.current?.abort();
-    setState(INITIAL_STATE);
+  useEffect(() => {
+    let active = true;
+    listDocuments()
+      .then((data) => {
+        if (active) {
+          setDocuments(data);
+          setListError(null);
+        }
+      })
+      .catch((err) => {
+        if (active) setListError((err as Error).message);
+      })
+      .finally(() => {
+        if (active) setLoadingList(false);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const dismissError = useCallback(() => {
-    setState((prev) => ({ ...prev, error: null }));
-  }, []);
+  const upload = useCallback(
+    async (file: File) => {
+      setUploading(true);
+      setUploadError(null);
+      setLastUploaded(null);
+      try {
+        const doc = await uploadDocument(file);
+        setLastUploaded(doc);
+        await refresh();
+      } catch (err) {
+        setUploadError((err as Error).message);
+      } finally {
+        setUploading(false);
+      }
+    },
+    [refresh],
+  );
 
-  return { state, handleUpload, reset, dismissError };
+  const dismissUploadError = useCallback(() => setUploadError(null), []);
+  const clearLastUploaded = useCallback(() => setLastUploaded(null), []);
+
+  return {
+    documents,
+    loadingList,
+    listError,
+    refresh,
+    upload,
+    uploading,
+    uploadError,
+    lastUploaded,
+    dismissUploadError,
+    clearLastUploaded,
+  };
 }

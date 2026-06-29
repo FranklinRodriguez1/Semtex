@@ -51,36 +51,42 @@ export function Sidebar() {
           >
             <span className="text-base">⌁</span> Home
           </Link>
-          <Link
-            className={`flex items-center gap-3 rounded px-4 py-3 text-sm transition-colors ${
-              isActive("/view/transfer")
-                ? "border-l-2 border-[#74f5ff] bg-[#201f21] text-[#E5E1E4] font-semibold"
-                : "text-[#b9cacb] hover:bg-[#201f21]"
-            }`}
-            href="/view/transfer"
-          >
-            <span className="text-base">•</span> Upload - Receive
-          </Link>
-          <Link
-            className={`flex items-center gap-3 rounded px-4 py-3 text-sm transition-colors ${
-              isActive("/view/configuration")
-                ? "border-l-2 border-[#74f5ff] bg-[#201f21] text-[#E5E1E4] font-semibold"
-                : "text-[#b9cacb] hover:bg-[#201f21]"
-            }`}
-            href="/view/configuration"
-          >
-            <span className="text-base">⚙</span> Config
-          </Link>
-          <Link
-            className={`flex items-center gap-3 rounded px-4 py-3 text-sm transition-colors ${
-              isActive("/view/team")
-                ? "border-l-2 border-[#74f5ff] bg-[#201f21] text-[#E5E1E4] font-semibold"
-                : "text-[#b9cacb] hover:bg-[#201f21]"
-            }`}
-            href="/view/team"
-          >
-            <span className="text-base">👥</span> Usuarios
-          </Link>
+          {(me?.role === "ADMIN" || me?.role === "OPERATOR") && (
+            <Link
+              className={`flex items-center gap-3 rounded px-4 py-3 text-sm transition-colors ${
+                isActive("/view/transfer")
+                  ? "border-l-2 border-[#74f5ff] bg-[#201f21] text-[#E5E1E4] font-semibold"
+                  : "text-[#b9cacb] hover:bg-[#201f21]"
+              }`}
+              href="/view/transfer"
+            >
+              <span className="text-base">•</span> Upload - Receive
+            </Link>
+          )}
+          {me?.isSuperAdmin && (
+            <Link
+              className={`flex items-center gap-3 rounded px-4 py-3 text-sm transition-colors ${
+                isActive("/view/configuration")
+                  ? "border-l-2 border-[#74f5ff] bg-[#201f21] text-[#E5E1E4] font-semibold"
+                  : "text-[#b9cacb] hover:bg-[#201f21]"
+              }`}
+              href="/view/configuration"
+            >
+              <span className="text-base">⚙</span> Config
+            </Link>
+          )}
+          {me?.role === "ADMIN" && (
+            <Link
+              className={`flex items-center gap-3 rounded px-4 py-3 text-sm transition-colors ${
+                isActive("/view/team")
+                  ? "border-l-2 border-[#74f5ff] bg-[#201f21] text-[#E5E1E4] font-semibold"
+                  : "text-[#b9cacb] hover:bg-[#201f21]"
+              }`}
+              href="/view/team"
+            >
+              <span className="text-base">👥</span> Usuarios
+            </Link>
+          )}
           {me?.isSuperAdmin && (
             <Link
               className={`flex items-center gap-3 rounded px-4 py-3 text-sm transition-colors ${
@@ -93,16 +99,18 @@ export function Sidebar() {
               <span className="text-base">🏢</span> Empresas
             </Link>
           )}
-          <Link
-            className={`flex items-center gap-3 rounded px-4 py-3 text-sm transition-colors ${
-              isActive("/audit")
-                ? "border-l-2 border-[#74f5ff] bg-[#201f21] text-[#E5E1E4] font-semibold"
-                : "text-[#b9cacb] hover:bg-[#201f21]"
-            }`}
-            href="/audit"
-          >
-            <span className="text-base">⚖</span> Audit
-          </Link>
+          {(me?.role === "ADMIN" || me?.role === "AUDITOR") && (
+            <Link
+              className={`flex items-center gap-3 rounded px-4 py-3 text-sm transition-colors ${
+                isActive("/audit")
+                  ? "border-l-2 border-[#74f5ff] bg-[#201f21] text-[#E5E1E4] font-semibold"
+                  : "text-[#b9cacb] hover:bg-[#201f21]"
+              }`}
+              href="/audit"
+            >
+              <span className="text-base">⚖</span> Audit
+            </Link>
+          )}
         </nav>
       </div>
       <div className="space-y-2 border-t border-[#3a494b] pt-5">
@@ -112,12 +120,14 @@ export function Sidebar() {
             {me?.isSuperAdmin ? " · SUPER-ADMIN" : me?.role ? ` · ${me.role}` : ""}
           </p>
         )}
-        <Link
-          className="flex items-center gap-3 rounded px-4 py-3 text-sm text-[#b9cacb] hover:bg-[#201f21]"
-          href="/view/configuration"
-        >
-          <span className="text-base">⚙</span> Settings
-        </Link>
+        {me?.isSuperAdmin && (
+          <Link
+            className="flex items-center gap-3 rounded px-4 py-3 text-sm text-[#b9cacb] hover:bg-[#201f21]"
+            href="/view/configuration"
+          >
+            <span className="text-base">⚙</span> Settings
+          </Link>
+        )}
         <button
           onClick={handleLogout}
           className="flex w-full items-center gap-3 rounded px-4 py-3 text-left text-sm text-[#b9cacb] hover:bg-[#201f21]"

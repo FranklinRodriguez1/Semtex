@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import { SendView } from './SendView';
 import { ReceiveView } from './ReceiveView';
+import { useDocuments } from './hooks/useTransfer';
 
 export function TransferContainer() {
   const [mode, setMode] = useState<'send' | 'receive'>('send');
+  const docs = useDocuments();
 
   const isReceive = mode === 'receive';
   const accentColor = isReceive ? '#F97316' : '#00E5FF';
@@ -44,7 +46,7 @@ export function TransferContainer() {
 
       {/* Conditional View */}
       <div className="relative animate-fade-in">
-        {mode === 'send' ? <SendView /> : <ReceiveView />}
+        {mode === 'send' ? <SendView docs={docs} /> : <ReceiveView docs={docs} />}
       </div>
     </div>
   );
