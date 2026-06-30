@@ -9,7 +9,7 @@ interface ToggleSwitchProps {
 
 export function ToggleSwitch({ mode, onToggle }: ToggleSwitchProps) {
   return (
-    <div className="flex w-full max-w-md mx-auto bg-[rgba(15,23,42,0.7)] rounded-3xl p-1">
+    <div className="flex w-full max-w-lg mx-auto bg-[rgba(15,23,42,0.7)] rounded-3xl p-1">
       <button
         type="button"
         onClick={() => onToggle('integrations')}
@@ -37,6 +37,20 @@ export function ToggleSwitch({ mode, onToggle }: ToggleSwitchProps) {
         `}
       >
         ROLES
+      </button>
+      <button
+        type="button"
+        onClick={() => onToggle('email')}
+        className={`
+          flex-1 py-2.5 text-[11px] uppercase tracking-[0.3em] rounded-2xl
+          transition-all duration-300
+          ${mode === 'email'
+            ? 'bg-[#22C55E]/10 text-[#22C55E] font-bold shadow-[0_0_12px_rgba(34,197,94,0.15)]'
+            : 'text-[rgba(34,197,94,0.4)] hover:text-[rgba(34,197,94,0.7)]'
+          }
+        `}
+      >
+        CORREO
       </button>
     </div>
   );

@@ -1,5 +1,10 @@
+import { RoleGuard } from "@/components/auth/RoleGuard";
 import { ConfigurationContainer } from "./ConfigurationContainer";
 
 export default function ConfigurationPage() {
-  return <ConfigurationContainer />;
+  return (
+    <RoleGuard superAdminOnly>
+      <ConfigurationContainer />
+    </RoleGuard>
+  );
 }

@@ -29,7 +29,7 @@ function isLoginRoute(pathname: string | null): boolean {
 }
 
 function isProtectedRoute(pathname: string | null): boolean {
-  return !!pathname && pathname.startsWith("/view/") && !isLoginRoute(pathname);
+  return !!pathname && !isLoginRoute(pathname);
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
