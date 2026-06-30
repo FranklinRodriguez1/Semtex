@@ -1,5 +1,4 @@
-import { apiFetch } from "@/lib/api";
-import { postInternal } from "@/lib/session";
+import { getInternal, postInternal } from "@/lib/session";
 
 export interface BackendUser {
   id: string;
@@ -11,7 +10,7 @@ export interface BackendUser {
 }
 
 export async function listUsers(): Promise<BackendUser[]> {
-  return apiFetch<BackendUser[]>("/api/users");
+  return getInternal<BackendUser[]>("/api/users");
 }
 
 export async function inviteUser(email: string, password: string, role: string): Promise<void> {
