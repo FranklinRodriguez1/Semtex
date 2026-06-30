@@ -16,14 +16,18 @@ export function initializeThreeScene(containerId: string) {
 
   const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
   renderer.setSize(container.clientWidth, container.clientHeight);
-  renderer.setPixelRatio(window.devicePixelRatio);
+  // Tope a 2: en pantallas retina/4K, devicePixelRatio (2–3) renderiza 4–9×
+  // los píxeles con antialias activo, sin diferencia visual apreciable.
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setClearColor(0x000000, 0);
   container.innerHTML = '';
   container.appendChild(renderer.domElement);
 
   // Main wireframe sphere
   const sphereRadius = 3.5;
-  const geometry = new THREE.IcosahedronGeometry(sphereRadius, 15);
+  // detail 4 (≈500 triángulos) es visualmente idéntico a 15 (≈5.120) para un
+  // wireframe difuminado al 0.3 de opacidad, y cuesta ~10× menos a la GPU.
+  const geometry = new THREE.IcosahedronGeometry(sphereRadius, 4);
 
   const material = new THREE.MeshBasicMaterial({
     color: 0x00dbe7,
@@ -125,8 +129,21 @@ export function initializeThreeScene(containerId: string) {
 
   window.addEventListener('resize', handleResize);
 
+  // Pausar el bucle de render cuando la pestaña no está visible: evita quemar
+  // GPU/CPU (y batería) animando algo que nadie ve.
+  function handleVisibility() {
+    if (document.hidden) {
+      cancelAnimationFrame(animationFrameId);
+    } else {
+      animationFrameId = requestAnimationFrame(animate);
+    }
+  }
+
+  document.addEventListener('visibilitychange', handleVisibility);
+
   return () => {
     window.removeEventListener('resize', handleResize);
+    document.removeEventListener('visibilitychange', handleVisibility);
     cancelAnimationFrame(animationFrameId);
 
     geometry.dispose();

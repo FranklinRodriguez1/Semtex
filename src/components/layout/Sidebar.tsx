@@ -1,30 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { getInternal } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
-
-interface Me {
-  email: string | null;
-  isSuperAdmin: boolean;
-  role: string | null;
-  organizationId: string | null;
-}
 
 export function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
-  const { user } = useAuth();
-  const [me, setMe] = useState<Me | null>(null);
-
-  useEffect(() => {
-    getInternal<Me>("/api/me")
-      .then(setMe)
-      .catch(() => setMe(null));
-  }, []);
+  const { user, me } = useAuth();
 
   async function handleLogout() {
     await supabase.auth.signOut();
