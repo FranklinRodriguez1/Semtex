@@ -34,7 +34,25 @@ Next y cómo llamar a todo. Léelo antes de tocar el código de datos/login.
 | Multi-tenant (cada empresa ve solo lo suyo) | ✅ |
 | Super-admin crea empresas (`/view/admin`) | ✅ (requiere `service_role`) |
 | Admin invita empleados (`/view/team`) | ✅ (requiere `service_role`) |
-| Subir documentos / Chat IA | ⏳ pendiente de cablear (backend listo) |
+| Subir documentos (`/view/transfer` → `POST /api/documents`) | ✅ cableado — requiere fix de Render (ver abajo) |
+| Chat IA (`/api/chat/messages`) | ✅ cableado — requiere fix de Render (ver abajo) |
+
+## ⚠️ Fix crítico en Render — claim de rol (chat y documentos dan 403)
+
+El Access Token Hook de Supabase inyecta el rol en el JWT como `app_role`.
+El backend en Render por defecto busca el claim `role`. Eso produce un `ROLE_`
+authority vacío → `hasRole("ADMIN")` falla → **403 en todos los endpoints protegidos**.
+
+**Acción requerida (una sola variable de entorno en Render):**
+
+```
+semtex.jwt.role-claim=app_role
+```
+
+Ruta: Render dashboard → servicio `semtex-backend` → **Environment** → Add env var → redeploy.
+
+> Alternativamente, si se actualiza el hook de Supabase para inyectar el claim como `role`
+> (en lugar de `app_role`), no hace falta tocar Render.
 
 **Modelo de onboarding (cerrado):** no hay registro público. El **super-admin** de la
 plataforma crea cada empresa + su admin; el **admin** invita a sus empleados.
@@ -135,12 +153,27 @@ Cada usuario carga su `org_id` en el token. El backend filtra **toda** consulta 
 - Pantalla de Chat IA (`/api/chat/messages`).
 - Pantalla de Auditoría (`/api/audit/logs`).
 
+## ⚠️ Fix de CORS — agregar dominio de Vercel
+
+El backend en Render solo permite orígenes listados en `SEMTEX_CORS_ALLOWED_ORIGINS`.
+Sin esto, el navegador bloqueará todas las llamadas desde Vercel.
+
+**Acción requerida en Render** (misma sección de Environment):
+
+```
+SEMTEX_CORS_ALLOWED_ORIGINS=http://localhost:3000,https://TU-APP.vercel.app
+```
+
+Reemplaza `TU-APP.vercel.app` con el dominio real de Vercel. Si usas dominio propio,
+agrégalo también separado por coma.
+
 ## Despliegue
 
 - **Backend:** ✅ desplegado en Render → `https://semtex-backend.onrender.com`
   (Docker + perfil `prod`). Guía y variables: `semtex-application-backend/DEPLOY.md`.
-- **Front:** pendiente desplegar en **Vercel** (Next.js). Configura las mismas variables de
-  `.env` en el panel de Vercel, y agrega su dominio al CORS del backend (en Render,
-  `SEMTEX_CORS_ALLOWED_ORIGINS`).
-- La base de datos ya es Supabase (en la nube). **Login funciona sin MinIO ni Ollama** (esos
-  solo hacen falta para documentos y chat).
+- **Front:** desplegar en **Vercel** (Next.js). Pasos:
+  1. Configura las mismas variables de `.env` en el panel de Vercel.
+  2. Agrega el dominio de Vercel a `SEMTEX_CORS_ALLOWED_ORIGINS` en Render (ver arriba).
+  3. Agrega `semtex.jwt.role-claim=app_role` en Render (ver arriba).
+- La base de datos ya es Supabase (en la nube). **Login funciona sin MinIO ni Ollama**
+  (Ollama solo hace falta para el chat IA).
