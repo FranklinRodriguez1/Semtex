@@ -123,7 +123,6 @@ export function TeamContainer() {
                 className="w-full rounded-xl border border-[#3a494b] bg-[#0e0e10] px-3 py-2 text-xs text-[#e5e1e4] outline-none focus:border-[#F97316]"
               >
                 <option value="OPERATOR">OPERATOR — sube documentos y usa el chat</option>
-                <option value="AUDITOR">AUDITOR — solo lectura y auditoría</option>
                 <option value="ADMIN">ADMIN — control total</option>
               </select>
             </div>

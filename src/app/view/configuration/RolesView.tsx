@@ -35,15 +35,6 @@ const ROLES: RoleDefinition[] = [
       'Enviar correos vía agente',
     ],
   },
-  {
-    name: 'AUDITOR',
-    label: 'Auditor',
-    color: '#22C55E',
-    description: 'Acceso de solo lectura al registro de auditoría.',
-    permissions: [
-      'Ver registro de auditoría',
-    ],
-  },
 ];
 
 export function RolesView() {
