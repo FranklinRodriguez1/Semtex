@@ -230,6 +230,7 @@ export function Loginy() {
                       placeholder="••••••••"
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && !loading && handleLogin()}
                       className="w-full rounded-lg border border-[#3a494b]/60 bg-[#131315] px-4 py-3 text-sm text-[#e5e1e4] outline-none transition-all placeholder:text-[#3a494b] focus:border-[#F97316]/60 focus:shadow-[0_0_14px_rgba(249,115,22,0.18)]"
                     />
                   </div>
