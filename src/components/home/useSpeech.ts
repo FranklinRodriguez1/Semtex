@@ -35,6 +35,15 @@ interface SpeechRecognitionInstance {
 }
 type SpeechRecognitionCtor = new () => SpeechRecognitionInstance;
 
+function getSpeechCtor(): SpeechRecognitionCtor | null {
+  if (typeof window === 'undefined') return null;
+  const w = window as unknown as {
+    SpeechRecognition?: SpeechRecognitionCtor;
+    webkitSpeechRecognition?: SpeechRecognitionCtor;
+  };
+  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
+}
+
 function mapError(code: string): string {
   switch (code) {
     case 'not-allowed':
@@ -44,15 +53,23 @@ function mapError(code: string): string {
       return 'No se detectó voz. Intenta de nuevo.';
     case 'audio-capture':
       return 'No se encontró micrófono.';
+    case 'network':
+      return 'El navegador bloqueó el servicio de voz. Usa Chrome o activa los permisos en tu navegador.';
+    case 'language-not-supported':
+      return 'Idioma no soportado por este navegador.';
+    case 'aborted':
+      // abort() interno — no mostrar al usuario
+      return '';
     default:
-      return 'Error de reconocimiento de voz.';
+      return `Error de voz: ${code}`;
   }
 }
 
 /**
  * Reconocimiento de voz (audio → texto) y síntesis (texto → voz) con la Web Speech API.
- * `onFinal` se invoca con el texto transcrito final (desde el evento, no desde un efecto).
- * Requiere contexto seguro (https o localhost) y un navegador compatible (Chrome/Edge).
+ * Crea una instancia fresca de SpeechRecognition en cada llamada a start() para evitar
+ * el bug de Chrome donde reutilizar la misma instancia tras onend genera errores espurios.
+ * Requiere contexto seguro (https o localhost) y Chrome/Edge.
  */
 export function useSpeech(opts: { onFinal: (text: string) => void; lang?: string }) {
   const lang = opts.lang ?? 'es-ES';
@@ -67,21 +84,38 @@ export function useSpeech(opts: { onFinal: (text: string) => void; lang?: string
     onFinalRef.current = opts.onFinal;
   }, [opts.onFinal]);
 
+  // Solo verifica soporte en montaje; no mantiene instancia persistente.
   useEffect(() => {
-    const w = window as unknown as {
-      SpeechRecognition?: SpeechRecognitionCtor;
-      webkitSpeechRecognition?: SpeechRecognitionCtor;
+    if (!getSpeechCtor()) setSupported(false);
+    return () => {
+      // Abortar sesión activa al desmontar
+      try {
+        recRef.current?.abort();
+      } catch {
+        // ya detenido
+      }
+      recRef.current = null;
+      setListening(false);
     };
-    const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
-    if (!Ctor) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSupported(false);
-      return;
+  }, []);
+
+  const start = useCallback(() => {
+    const Ctor = getSpeechCtor();
+    if (!Ctor) return;
+
+    // Abortar sesión anterior si existiera
+    try {
+      recRef.current?.abort();
+    } catch {
+      // ya detenido
     }
+
+    // Instancia fresca en cada sesión (evita bug de Chrome con instancias reutilizadas)
     const rec = new Ctor();
     rec.lang = lang;
     rec.interimResults = true;
     rec.continuous = false;
+
     rec.onresult = (e) => {
       let finalText = '';
       let interimText = '';
@@ -97,37 +131,33 @@ export function useSpeech(opts: { onFinal: (text: string) => void; lang?: string
         onFinalRef.current(finalText.trim());
       }
     };
+
     rec.onerror = (e) => {
-      setError(mapError(e.error));
+      const msg = mapError(e.error);
+      if (msg) setError(msg);
       setListening(false);
     };
-    rec.onend = () => setListening(false);
-    recRef.current = rec;
-    return () => {
-      try {
-        rec.abort();
-      } catch {
-        // ya detenido
-      }
-      recRef.current = null;
-    };
-  }, [lang]);
 
-  const start = useCallback(() => {
-    const rec = recRef.current;
-    if (!rec) return;
+    rec.onend = () => setListening(false);
+
     setError(null);
     setInterim('');
+
     try {
       rec.start();
+      recRef.current = rec;
       setListening(true);
     } catch {
-      // ya estaba escuchando
+      setError('Error al iniciar el micrófono. Intenta de nuevo.');
     }
-  }, []);
+  }, [lang]);
 
   const stop = useCallback(() => {
-    recRef.current?.stop();
+    try {
+      recRef.current?.stop();
+    } catch {
+      // ya detenido
+    }
     setListening(false);
   }, []);
 
@@ -137,7 +167,21 @@ export function useSpeech(opts: { onFinal: (text: string) => void; lang?: string
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = lang;
-      window.speechSynthesis.speak(utterance);
+
+      const trySpeak = () => {
+        const voices = window.speechSynthesis.getVoices();
+        const preferred =
+          voices.find((v) => v.lang === lang) ??
+          voices.find((v) => v.lang.startsWith(lang.split('-')[0]));
+        if (preferred) utterance.voice = preferred;
+        window.speechSynthesis.speak(utterance);
+      };
+
+      if (window.speechSynthesis.getVoices().length > 0) {
+        trySpeak();
+      } else {
+        window.speechSynthesis.addEventListener('voiceschanged', trySpeak, { once: true });
+      }
     },
     [lang],
   );

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 export function initializeThreeScene(containerId: string) {
   const container = document.getElementById(containerId);
-  if (!container) return () => {};
+  if (!container) return { cleanup: () => {}, setListening: (_: boolean) => {} };
 
   const scene = new THREE.Scene();
 
@@ -21,7 +21,6 @@ export function initializeThreeScene(containerId: string) {
   container.innerHTML = '';
   container.appendChild(renderer.domElement);
 
-  // Main wireframe sphere
   const sphereRadius = 3.5;
   const geometry = new THREE.IcosahedronGeometry(sphereRadius, 15);
   const material = new THREE.MeshBasicMaterial({
@@ -33,7 +32,6 @@ export function initializeThreeScene(containerId: string) {
   const sphere = new THREE.Mesh(geometry, material);
   scene.add(sphere);
 
-  // Particle field
   const particlesCount = 2000;
   const posArray = new Float32Array(particlesCount * 3);
   for (let i = 0; i < particlesCount * 3; i++) {
@@ -50,7 +48,6 @@ export function initializeThreeScene(containerId: string) {
   const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
   scene.add(particlesMesh);
 
-  // Inner core
   const coreGeometry = new THREE.IcosahedronGeometry(sphereRadius * 0.95, 2);
   const coreMaterial = new THREE.MeshBasicMaterial({
     color: 0x00dbe7,
@@ -61,46 +58,62 @@ export function initializeThreeScene(containerId: string) {
   scene.add(core);
 
   let animationFrameId: number;
+  let isListening = false;
 
   function animate() {
     animationFrameId = requestAnimationFrame(animate);
 
-    sphere.rotation.y += 0.002;
-    sphere.rotation.x += 0.001;
-    particlesMesh.rotation.y += 0.0005;
-
-    const time = Date.now() * 0.001;
-    const pulse = Math.sin(time) * 0.05 + 1;
-    sphere.scale.set(pulse, pulse, pulse);
+    if (isListening) {
+      sphere.rotation.y += 0.006;
+      sphere.rotation.x += 0.003;
+      particlesMesh.rotation.y += 0.002;
+      const time = Date.now() * 0.001;
+      const pulse = Math.sin(time * 4) * 0.12 + 1.05;
+      sphere.scale.set(pulse, pulse, pulse);
+      material.opacity = 0.6;
+    } else {
+      sphere.rotation.y += 0.002;
+      sphere.rotation.x += 0.001;
+      particlesMesh.rotation.y += 0.0005;
+      const time = Date.now() * 0.001;
+      const pulse = Math.sin(time) * 0.05 + 1;
+      sphere.scale.set(pulse, pulse, pulse);
+      material.opacity = 0.3;
+    }
 
     renderer.render(scene, camera);
   }
 
   animate();
 
-  function handleResize() {
+  const handleResize = () => {
     const w = container.clientWidth;
     const h = container.clientHeight;
     renderer.setSize(w, h);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
-  }
+  };
 
   window.addEventListener('resize', handleResize);
 
-  return () => {
-    window.removeEventListener('resize', handleResize);
-    cancelAnimationFrame(animationFrameId);
-    geometry.dispose();
-    material.dispose();
-    particlesGeometry.dispose();
-    particlesMaterial.dispose();
-    coreGeometry.dispose();
-    coreMaterial.dispose();
-    renderer.dispose();
-    if (container.contains(renderer.domElement)) {
-      container.removeChild(renderer.domElement);
-    }
+  return {
+    cleanup: () => {
+      window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(animationFrameId);
+      geometry.dispose();
+      material.dispose();
+      particlesGeometry.dispose();
+      particlesMaterial.dispose();
+      coreGeometry.dispose();
+      coreMaterial.dispose();
+      renderer.dispose();
+      if (container.contains(renderer.domElement)) {
+        container.removeChild(renderer.domElement);
+      }
+    },
+    setListening: (value: boolean) => {
+      isListening = value;
+    },
   };
 }
 
