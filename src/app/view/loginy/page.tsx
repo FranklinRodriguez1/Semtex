@@ -1,4 +1,4 @@
-import { Loginy } from "@/app/view/loginy/LoginyComponent/Loginy";
+import { Loginy } from "@/app/view/loginy/Loginy";
 
 export default function LoginyPage() {
   return <Loginy />;
