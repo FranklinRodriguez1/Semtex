@@ -67,8 +67,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!active) return;
 
-      setUser(currentUser ?? null);
       setMe(currentUser ? meData : null);
+      setUser(currentUser ?? null);
       setStatus(currentUser ? "authenticated" : "unauthenticated");
       setIsChecking(false);
     }

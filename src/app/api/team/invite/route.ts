@@ -15,7 +15,7 @@ type Role = (typeof ALLOWED_ROLES)[number];
  * Body: { email, password, role }  (role ∈ OPERATOR | AUDITOR | ADMIN)
  */
 export async function POST(request: Request) {
-  const caller = await getCaller(request);
+  const caller = await getCaller();
   if (!caller) {
     return Response.json({ message: "No autenticado." }, { status: 401 });
   }

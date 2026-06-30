@@ -4,8 +4,8 @@ import { supabaseAdmin, getCaller, isSuperAdmin } from "@/lib/supabaseAdmin";
  * GET /api/admin/companies — lista todas las organizaciones de la plataforma
  * con el conteo de usuarios. Solo el super-admin (no tiene org propia) puede verlas.
  */
-export async function GET(request: Request) {
-  const caller = await getCaller(request);
+export async function GET() {
+  const caller = await getCaller();
   if (!caller) {
     return Response.json({ message: "No autenticado." }, { status: 401 });
   }
@@ -56,7 +56,7 @@ export async function GET(request: Request) {
  * Body: { companyName, adminEmail, adminPassword }
  */
 export async function POST(request: Request) {
-  const caller = await getCaller(request);
+  const caller = await getCaller();
   if (!caller) {
     return Response.json({ message: "No autenticado." }, { status: 401 });
   }
