@@ -7,7 +7,7 @@ import { getInternal } from '@/lib/session';
 import { useChat } from './hooks/useChat';
 import { useSpeech } from './hooks/useSpeech';
 import { listDocuments, type BackendDocument } from '@/app/view/transfer/services/transfer';
-import { getMailCredentials } from '@/app/view/configuration/EmailView';
+import { supabase } from '@/lib/supabase';
 
 type EmailStep = 'asking_to' | 'asking_subject' | 'asking_body' | 'confirming';
 
@@ -128,18 +128,15 @@ export default function HomeComponents() {
           return;
         }
 
-        const creds = getMailCredentials();
-        if (!creds) {
-          emailRef.current = null;
-          say('No encontré credenciales de correo. Ve a Configuración → CORREO y guarda tu email y código de acceso primero.', speak);
-          return;
-        }
-
         try {
+          const { data: { session } } = await supabase.auth.getSession();
           const res = await fetch('/api/mail', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...creds, to: state.to, subject: state.subject, body: state.body }),
+            headers: {
+              'Content-Type': 'application/json',
+              ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+            },
+            body: JSON.stringify({ to: state.to, subject: state.subject, body: state.body }),
           });
           emailRef.current = null;
           if (!res.ok) {
