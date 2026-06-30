@@ -7,6 +7,8 @@ import { getInternal } from '@/lib/session';
 import { useChat } from './hooks/useChat';
 import { useSpeech } from './hooks/useSpeech';
 import { listDocuments, type BackendDocument } from '@/app/view/transfer/services/transfer';
+import { getMailCredentials } from '@/app/view/configuration/EmailView';
+
 type EmailStep = 'asking_to' | 'asking_subject' | 'asking_body' | 'confirming';
 
 interface EmailState {
@@ -126,10 +128,29 @@ export default function HomeComponents() {
           return;
         }
 
-        const prompt =
-          `Envía un correo electrónico a ${state.to} con asunto "${state.subject}" y el siguiente mensaje:\n\n${state.body}`;
-        emailRef.current = null;
-        void send(prompt, selectedDocRef.current || undefined);
+        const creds = getMailCredentials();
+        if (!creds) {
+          emailRef.current = null;
+          say('No encontré credenciales de correo. Ve a Configuración → CORREO y guarda tu email y código de acceso primero.', speak);
+          return;
+        }
+
+        try {
+          const res = await fetch('/api/mail', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...creds, to: state.to, subject: state.subject, body: state.body }),
+          });
+          emailRef.current = null;
+          if (!res.ok) {
+            const data = await res.json() as { message?: string };
+            throw new Error(data.message ?? 'Error al enviar.');
+          }
+          say(`¡Correo enviado correctamente a ${state.to}! ¿En qué más puedo ayudarte?`, speak);
+        } catch (err) {
+          say(`Error al enviar el correo: ${(err as Error).message}`, speak);
+          emailRef.current = null;
+        }
         return;
       }
     }
