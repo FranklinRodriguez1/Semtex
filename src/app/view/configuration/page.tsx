@@ -3,7 +3,7 @@ import { ConfigurationContainer } from "./ConfigurationContainer";
 
 export default function ConfigurationPage() {
   return (
-    <RoleGuard superAdminOnly>
+    <RoleGuard roles={["ADMIN"]} superAdminAllowed>
       <ConfigurationContainer />
     </RoleGuard>
   );

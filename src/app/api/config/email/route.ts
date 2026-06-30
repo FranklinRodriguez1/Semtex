@@ -27,7 +27,7 @@ export async function PUT(request: Request) {
   const profile = await getCallerProfile(caller.id);
   if (!profile) return Response.json({ message: 'Organización no encontrada.' }, { status: 404 });
 
-  if (profile.role !== 'admin') {
+  if (profile.role !== 'ADMIN') {
     return Response.json({ message: 'Solo los administradores pueden configurar el correo.' }, { status: 403 });
   }
 

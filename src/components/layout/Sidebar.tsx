@@ -63,7 +63,7 @@ export function Sidebar() {
               <span className="text-base">•</span> Upload - Receive
             </Link>
           )}
-          {me?.isSuperAdmin && (
+          {(me?.isSuperAdmin || me?.role === "ADMIN") && (
             <Link
               className={`flex items-center gap-3 rounded px-4 py-3 text-sm transition-colors ${
                 isActive("/view/configuration")
