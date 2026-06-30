@@ -26,20 +26,24 @@ function resolveName(user: User): string {
 }
 
 export async function validateCurrentUser(): Promise<AuthUser | null> {
-  const { data, error } = await supabase.auth.getUser();
+  // Para el gating en cliente usamos la sesión local (instantánea, sin red).
+  // `autoRefreshToken` mantiene el token al día y la verificación real del JWT
+  // ocurre en el servidor (getCaller) en cada route handler.
+  const { data, error } = await supabase.auth.getSession();
+  const sessionUser = data.session?.user;
 
-  if (error || !data.user) {
+  if (error || !sessionUser) {
     return null;
   }
 
-  const email = data.user.email?.trim();
+  const email = sessionUser.email?.trim();
   if (!email) {
     return null;
   }
 
   return {
-    id: data.user.id,
-    name: resolveName(data.user),
+    id: sessionUser.id,
+    name: resolveName(sessionUser),
     email,
   };
 }

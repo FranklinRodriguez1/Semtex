@@ -2,8 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import Image from 'next/image';
-import { initializeThreeScene } from '@/utils/animationHomeThree';
-import { getInternal } from '@/lib/session';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { useChat } from './hooks/useChat';
 import { useSpeech } from './hooks/useSpeech';
 import { listDocuments, type BackendDocument } from '@/app/view/transfer/services/transfer';
@@ -16,11 +15,6 @@ interface EmailState {
   to: string;
   subject: string;
   body: string;
-}
-
-interface Me {
-  isSuperAdmin: boolean;
-  role: string | null;
 }
 
 function isEmailIntent(text: string): boolean {
@@ -36,7 +30,8 @@ function isEmailIntent(text: string): boolean {
 }
 
 export default function HomeComponents() {
-  const [enabled, setEnabled] = useState(false);
+  const { me } = useAuth();
+  const enabled = me?.role === 'ADMIN' || me?.role === 'OPERATOR';
   const [input, setInput] = useState('');
   const [documents, setDocuments] = useState<BackendDocument[]>([]);
   const [selectedDocId, setSelectedDocId] = useState('');
@@ -166,14 +161,18 @@ export default function HomeComponents() {
   }, [injectMessage, say, speak, send]);
 
   useEffect(() => {
-    const cleanup = initializeThreeScene('three-sphere-scene');
-    return () => { cleanup?.(); };
-  }, []);
-
-  useEffect(() => {
-    getInternal<Me>('/api/me')
-      .then((me) => setEnabled(me.role === 'ADMIN' || me.role === 'OPERATOR'))
-      .catch(() => setEnabled(false));
+    // Carga diferida de three.js: se descarga después del primer pintado en su
+    // propio chunk, fuera del bundle inicial del Home.
+    let cleanup: (() => void) | undefined;
+    let cancelled = false;
+    void import('@/utils/animationHomeThree').then(({ initializeThreeScene }) => {
+      if (cancelled) return;
+      cleanup = initializeThreeScene('three-sphere-scene');
+    });
+    return () => {
+      cancelled = true;
+      cleanup?.();
+    };
   }, []);
 
   useEffect(() => {

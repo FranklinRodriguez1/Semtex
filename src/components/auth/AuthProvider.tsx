@@ -9,12 +9,22 @@ import {
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { getInternal } from "@/lib/session";
 import { validateCurrentUser, type AuthUser } from "@/lib/auth-service";
 
 type AuthStatus = "checking" | "authenticated" | "unauthenticated";
 
+export interface Me {
+  email: string | null;
+  isSuperAdmin: boolean;
+  role: string | null;
+  organizationId: string | null;
+}
+
 interface AuthContextValue {
   user: AuthUser | null;
+  /** Perfil del usuario (rol/organización) compartido para evitar pedir /api/me en cada componente. */
+  me: Me | null;
   status: AuthStatus;
   isAuthenticated: boolean;
   isChecking: boolean;
@@ -36,30 +46,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [me, setMe] = useState<Me | null>(null);
   const [status, setStatus] = useState<AuthStatus>("checking");
-  const [isChecking, setIsChecking] = useState(true);
 
+  // 1) Validar la sesión UNA vez al montar y reaccionar a cambios de auth.
+  //    No depende de `pathname`: navegar entre páginas ya no dispara una
+  //    petición de red ni vuelve a mostrar la pantalla de "Validando acceso".
   useEffect(() => {
     let active = true;
 
     async function syncAuthState() {
-      setIsChecking(true);
-
       const currentUser = await validateCurrentUser();
-      if (!active) {
-        return;
-      }
-
+      if (!active) return;
       setUser(currentUser);
       setStatus(currentUser ? "authenticated" : "unauthenticated");
-
-      if (!currentUser && isProtectedRoute(pathname)) {
-        router.replace(LOGIN_ROUTE);
-      } else if (currentUser && isLoginRoute(pathname)) {
-        router.replace(AFTER_AUTH_ROUTE);
-      }
-
-      setIsChecking(false);
     }
 
     void syncAuthState();
@@ -74,15 +74,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       active = false;
       subscription.unsubscribe();
     };
-  }, [pathname, router]);
+  }, []);
+
+  // 2) Cargar el perfil (/api/me) una sola vez por sesión autenticada y
+  //    compartirlo; Sidebar y Home lo consumen sin volver a pedirlo.
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    let active = true;
+    getInternal<Me>("/api/me")
+      .then((data) => {
+        if (active) setMe(data);
+      })
+      .catch(() => {
+        if (active) setMe(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [status]);
+
+  // 3) Redirecciones: reaccionan al estado ya conocido + la ruta actual,
+  //    sin volver a validar contra la red ni bloquear con la pantalla de carga.
+  useEffect(() => {
+    if (status === "checking") return;
+    if (status === "unauthenticated" && isProtectedRoute(pathname)) {
+      router.replace(LOGIN_ROUTE);
+    } else if (status === "authenticated" && isLoginRoute(pathname)) {
+      router.replace(AFTER_AUTH_ROUTE);
+    }
+  }, [status, pathname, router]);
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        // `me` solo es válido mientras hay sesión: tras cerrarla se descarta
+        // sin necesidad de un setState extra dentro del efecto.
+        me: status === "authenticated" ? me : null,
         status,
         isAuthenticated: status === "authenticated",
-        isChecking,
+        isChecking: status === "checking",
       }}
     >
       {children}
