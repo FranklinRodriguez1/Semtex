@@ -7,7 +7,7 @@ import { getInternal } from '@/lib/session';
 import { useChat } from './hooks/useChat';
 import { useSpeech } from './hooks/useSpeech';
 import { listDocuments, type BackendDocument } from '@/app/view/transfer/services/transfer';
-import { sendMessage } from '@/lib/chatService';
+import { sendMessage } from './services/chatService';
 import { getMailCredentials } from '@/app/view/configuration/EmailView';
 
 type EmailStep = 'asking_to' | 'asking_subject' | 'asking_body' | 'confirming';

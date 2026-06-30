@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { getHistory, sendMessage, type MessageRole } from '@/lib/chatService';
+import { getHistory, sendMessage, type MessageRole } from '../services/chatService';
 
 export interface UiMessage {
   role: MessageRole;
