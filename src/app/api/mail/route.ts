@@ -1,29 +1,52 @@
-import { getCaller } from '@/lib/supabaseAdmin';
+import { NextRequest, NextResponse } from 'next/server';
 import { sendMail } from '@/utils/mailer';
+import { getCaller, getCallerProfile, supabaseAdmin } from '@/lib/supabaseAdmin';
 
-export async function POST(request: Request) {
-  const caller = await getCaller(request);
-  if (!caller) {
-    return Response.json({ message: 'No autenticado.' }, { status: 401 });
-  }
+interface SendBody {
+  to: string;
+  subject: string;
+  body: string;
+}
 
-  let body: { fromEmail?: string; accessCode?: string; to?: string; subject?: string; body?: string };
+export async function POST(req: NextRequest) {
   try {
-    body = await request.json();
-  } catch {
-    return Response.json({ message: 'JSON inválido.' }, { status: 400 });
-  }
+    const { to, subject, body } = await req.json() as SendBody;
 
-  const { fromEmail, accessCode, to, subject, body: text } = body;
+    if (!to || !subject || !body) {
+      return NextResponse.json({ message: 'Faltan campos requeridos.' }, { status: 400 });
+    }
 
-  if (!fromEmail || !accessCode || !to || !subject || !text) {
-    return Response.json({ message: 'Faltan campos requeridos.' }, { status: 400 });
-  }
+    const caller = await getCaller(req);
+    if (!caller) return NextResponse.json({ message: 'No autenticado.' }, { status: 401 });
 
-  try {
-    await sendMail({ fromEmail, accessCode, to, subject, body: text });
-    return Response.json({ ok: true });
+    const profile = await getCallerProfile(caller.id);
+    if (!profile) {
+      return NextResponse.json(
+        { message: 'El correo no está configurado. Ve a Configuración → CORREO y guarda tu Gmail y contraseña de app.' },
+        { status: 422 },
+      );
+    }
+
+    const { data } = await supabaseAdmin
+      .from('organizations')
+      .select('smtp_email, smtp_password')
+      .eq('id', profile.organizationId)
+      .single();
+
+    const smtpEmail = (data as { smtp_email: string | null; smtp_password: string | null } | null)?.smtp_email ?? null;
+    const smtpPassword = (data as { smtp_email: string | null; smtp_password: string | null } | null)?.smtp_password ?? null;
+
+    if (!smtpEmail || !smtpPassword) {
+      return NextResponse.json(
+        { message: 'El correo no está configurado. Ve a Configuración → CORREO y guarda tu Gmail y contraseña de app.' },
+        { status: 422 },
+      );
+    }
+
+    await sendMail({ fromEmail: smtpEmail, accessCode: smtpPassword, to, subject, body });
+    return NextResponse.json({ message: 'Correo enviado.' });
   } catch (err) {
-    return Response.json({ message: (err as Error).message }, { status: 500 });
+    const message = err instanceof Error ? err.message : 'Error desconocido.';
+    return NextResponse.json({ message }, { status: 500 });
   }
 }

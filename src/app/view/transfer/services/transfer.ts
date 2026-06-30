@@ -27,6 +27,20 @@ export async function listDocuments(): Promise<BackendDocument[]> {
   return apiFetch<BackendDocument[]>('/api/documents');
 }
 
+export interface FinancialRecord {
+  id: string;
+  documentId: string;
+  sheetName: string;
+  rowIndex: number;
+  rowData: Record<string, unknown>;
+  createdAt: string;
+}
+
+/** Devuelve las filas ingeridas de un documento (máx. 500). */
+export async function getFinancialRecords(documentId: string): Promise<FinancialRecord[]> {
+  return apiFetch<FinancialRecord[]>(`/api/financial-records?documentId=${encodeURIComponent(documentId)}&limit=500`);
+}
+
 /** Formatea bytes a una unidad legible (KB/MB). */
 export function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;

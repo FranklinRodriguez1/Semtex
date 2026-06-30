@@ -39,3 +39,37 @@ export async function apiFetch<T = unknown>(
 
   return (res.status === 204 ? null : await res.json()) as T;
 }
+
+/** Llama a una ruta Next.js local (sin prefijo de backend externo). */
+export async function localFetch<T = unknown>(
+  path: string,
+  init: RequestInit = {},
+): Promise<T> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const headers = new Headers(init.headers);
+  if (session?.access_token) {
+    headers.set("Authorization", `Bearer ${session.access_token}`);
+  }
+  const isFormData = init.body instanceof FormData;
+  if (init.body && !isFormData && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  const res = await fetch(path, { ...init, headers });
+
+  if (!res.ok) {
+    let message = `Error ${res.status}`;
+    try {
+      const body = await res.json();
+      message = body?.message ?? message;
+    } catch {
+      // respuesta sin cuerpo JSON
+    }
+    throw new Error(message);
+  }
+
+  return (res.status === 204 ? null : await res.json()) as T;
+}

@@ -13,22 +13,22 @@ interface Me {
 
 /**
  * Protege una página por rol. La seguridad REAL la aplica el backend (403);
- * esto es UX: evita que un rol vea una sección que no le corresponde, incluso
- * entrando por URL directa.
+ * esto es UX: evita que un rol vea una sección que no le corresponde.
  *
- * - `roles`: roles de la organización permitidos (ADMIN/OPERATOR/AUDITOR).
- * - `superAdminOnly`: si es true, solo el super-admin de la plataforma entra.
- *
- * El rol se lee de /api/me (fuente: public.users), así que no depende de que el
- * JWT traiga claims.
+ * - `roles`: roles de organización permitidos (ADMIN / OPERATOR).
+ * - `superAdminOnly`: solo el super-admin de la plataforma entra.
+ * - `superAdminAllowed`: si es true, el super-admin también puede entrar aunque
+ *   no tenga un rol de organización (se combina con `roles`).
  */
 export function RoleGuard({
   roles,
   superAdminOnly = false,
+  superAdminAllowed = false,
   children,
 }: {
   roles?: string[];
   superAdminOnly?: boolean;
+  superAdminAllowed?: boolean;
   children: ReactNode;
 }) {
   const router = useRouter();
@@ -39,18 +39,22 @@ export function RoleGuard({
     async function check() {
       const me = await getInternal<Me>("/api/me").catch(() => null);
       if (!active) return;
-      const allowed = me
-        ? superAdminOnly
-          ? me.isSuperAdmin
-          : me.role != null && (roles?.includes(me.role) ?? false)
-        : false;
+      let allowed = false;
+      if (me) {
+        if (superAdminOnly) {
+          allowed = me.isSuperAdmin;
+        } else {
+          const roleOk = me.role != null && (roles?.includes(me.role) ?? false);
+          allowed = roleOk || (superAdminAllowed && me.isSuperAdmin);
+        }
+      }
       setState(allowed ? "ok" : "denied");
     }
     void check();
     return () => {
       active = false;
     };
-  }, [roles, superAdminOnly]);
+  }, [roles, superAdminOnly, superAdminAllowed]);
 
   if (state === "loading") {
     return (

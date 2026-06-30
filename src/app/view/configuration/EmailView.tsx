@@ -1,22 +1,50 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { localFetch } from '@/lib/api';
 
-interface EmailViewProps {
-  userEmail: string;
+interface EmailConfig {
+  fromEmail: string | null;
+  password: string | null;
 }
 
-const STORAGE_KEY = 'semtex_mail_credentials';
-
-export function EmailView({ userEmail }: EmailViewProps) {
-  const [accessCode, setAccessCode] = useState('');
+export function EmailView() {
+  const [fromEmail, setFromEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [configured, setConfigured] = useState(false);
 
-  function handleSave() {
-    if (!accessCode.trim()) return;
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ fromEmail: userEmail, accessCode: accessCode.trim() }));
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  useEffect(() => {
+    localFetch<EmailConfig>('/api/config/email')
+      .then((cfg) => {
+        if (cfg.fromEmail) {
+          setFromEmail(cfg.fromEmail);
+          setConfigured(true);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  async function handleSave() {
+    if (!fromEmail.trim() || !password.trim()) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await localFetch('/api/config/email', {
+        method: 'PUT',
+        body: JSON.stringify({ fromEmail: fromEmail.trim(), password: password.trim() }),
+      });
+      setConfigured(true);
+      setSaved(true);
+      setPassword('');
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -31,59 +59,64 @@ export function EmailView({ userEmail }: EmailViewProps) {
       </div>
 
       <div className="space-y-4 rounded-2xl border border-[#3a494b] bg-[#0e0e10]/40 p-6">
+        {configured && (
+          <div className="flex items-center gap-2 rounded-lg border border-[#22C55E]/30 bg-[#22C55E]/5 px-3 py-2">
+            <span className="h-2 w-2 rounded-full bg-[#22C55E] shadow-[0_0_6px_rgba(34,197,94,0.5)]" />
+            <p className="text-[11px] text-[#22C55E]">Correo configurado — {fromEmail}</p>
+          </div>
+        )}
+
         <div className="space-y-1">
           <label className="block text-[10px] uppercase tracking-[0.22em] text-[#b9cacb]">
-            Correo electrónico
+            Correo Gmail remitente
           </label>
           <input
             type="email"
-            value={userEmail}
-            readOnly
-            className="w-full cursor-not-allowed rounded-xl border border-[#3a494b] bg-[#0e0e10] px-3 py-2 text-xs text-[#3a494b] outline-none"
+            value={fromEmail}
+            onChange={(e) => setFromEmail(e.target.value)}
+            placeholder="tucorreo@gmail.com"
+            className="w-full rounded-xl border border-[#3a494b] bg-[#0e0e10] px-3 py-2 text-xs text-[#e5e1e4] outline-none transition focus:border-[#06b6d4] focus:shadow-[0_0_10px_rgba(6,182,212,0.3)]"
           />
         </div>
 
         <div className="space-y-1">
           <label className="block text-[10px] uppercase tracking-[0.22em] text-[#b9cacb]">
-            Código de acceso (contraseña de app)
+            Contraseña de aplicación
           </label>
           <input
             type="password"
-            value={accessCode}
-            onChange={(e) => setAccessCode(e.target.value)}
-            placeholder="••••••••••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder={configured ? '••••••••••••••••  (dejar vacío para no cambiar)' : '••••••••••••••••'}
             className="w-full rounded-xl border border-[#3a494b] bg-[#0e0e10] px-3 py-2 text-xs text-[#e5e1e4] outline-none transition focus:border-[#06b6d4] focus:shadow-[0_0_10px_rgba(6,182,212,0.3)]"
           />
-          <p className="text-[10px] text-[#3a494b] pt-1">
-            Genera una contraseña de aplicación en tu cuenta de Gmail → Seguridad → Verificación en dos pasos.
+          <p className="pt-1 text-[10px] text-[#3a494b]">
+            Genera una contraseña de aplicación en Gmail → Seguridad → Verificación en dos pasos.
+            Se guarda en la base de datos de tu organización.
           </p>
         </div>
 
+        {error && (
+          <p className="rounded-lg border border-[#EF4444]/40 bg-[#EF4444]/10 px-3 py-2 text-[11px] text-[#EF4444]">
+            {error}
+          </p>
+        )}
+
         {saved && (
           <p className="rounded-lg border border-[#22C55E]/40 bg-[#22C55E]/10 px-3 py-2 text-[11px] text-[#22C55E]">
-            Credenciales guardadas para esta sesión.
+            Configuración guardada correctamente.
           </p>
         )}
 
         <button
           type="button"
           onClick={handleSave}
-          disabled={!accessCode.trim()}
+          disabled={saving || !fromEmail.trim() || !password.trim()}
           className="w-full rounded-xl bg-[#06B6D4] py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#0F172A] transition hover:brightness-110 active:scale-[0.98] disabled:opacity-40"
         >
-          Guardar
+          {saving ? 'Guardando…' : 'Guardar'}
         </button>
       </div>
     </div>
   );
-}
-
-export function getMailCredentials(): { fromEmail: string; accessCode: string } | null {
-  try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as { fromEmail: string; accessCode: string };
-  } catch {
-    return null;
-  }
 }

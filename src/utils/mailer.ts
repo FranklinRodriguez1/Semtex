@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 
-export interface MailOptions {
+interface SendMailOptions {
   fromEmail: string;
   accessCode: string;
   to: string;
@@ -8,19 +8,19 @@ export interface MailOptions {
   body: string;
 }
 
-export async function sendMail({ fromEmail, accessCode, to, subject, body }: MailOptions): Promise<void> {
+export async function sendMail(opts: SendMailOptions): Promise<void> {
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: fromEmail,
-      pass: accessCode,
+      user: opts.fromEmail,
+      pass: opts.accessCode,
     },
   });
 
   await transporter.sendMail({
-    from: fromEmail,
-    to,
-    subject,
-    text: body,
+    from: opts.fromEmail,
+    to: opts.to,
+    subject: opts.subject,
+    text: opts.body,
   });
 }

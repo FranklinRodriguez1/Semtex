@@ -4,7 +4,7 @@ import {
   getCallerProfile,
 } from "@/lib/supabaseAdmin";
 
-const ALLOWED_ROLES = ["OPERATOR", "AUDITOR", "ADMIN"] as const;
+const ALLOWED_ROLES = ["OPERATOR", "ADMIN"] as const;
 type Role = (typeof ALLOWED_ROLES)[number];
 
 /**
@@ -12,7 +12,7 @@ type Role = (typeof ALLOWED_ROLES)[number];
  * La organización se toma del perfil del admin autenticado (no del body), así
  * un admin nunca puede crear usuarios en otra empresa.
  *
- * Body: { email, password, role }  (role ∈ OPERATOR | AUDITOR | ADMIN)
+ * Body: { email, password, role }  (role ∈ OPERATOR | ADMIN)
  */
 export async function POST(request: Request) {
   const caller = await getCaller(request);
