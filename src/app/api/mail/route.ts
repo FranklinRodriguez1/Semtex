@@ -1,18 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendMail } from '@/utils/mailer';
+import { getCaller, getCallerProfile, supabaseAdmin } from '@/lib/supabaseAdmin';
 
 interface SendBody {
   to: string;
   subject: string;
   body: string;
 }
-
-interface EmailConfig {
-  fromEmail: string | null;
-  password: string | null;
-}
-
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,29 +16,34 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'Faltan campos requeridos.' }, { status: 400 });
     }
 
-    // Forward the user's JWT to retrieve the org's stored SMTP config.
-    const authHeader = req.headers.get('Authorization') ?? '';
-    const configRes = await fetch(`${BACKEND_URL}/api/config/email`, {
-      headers: { Authorization: authHeader },
-    });
+    const caller = await getCaller(req);
+    if (!caller) return NextResponse.json({ message: 'No autenticado.' }, { status: 401 });
 
-    if (!configRes.ok) {
-      return NextResponse.json(
-        { message: 'No se pudo obtener la configuración de correo del servidor.' },
-        { status: 502 },
-      );
-    }
-
-    const config = await configRes.json() as EmailConfig;
-
-    if (!config.fromEmail || !config.password) {
+    const profile = await getCallerProfile(caller.id);
+    if (!profile) {
       return NextResponse.json(
         { message: 'El correo no está configurado. Ve a Configuración → CORREO y guarda tu Gmail y contraseña de app.' },
         { status: 422 },
       );
     }
 
-    await sendMail({ fromEmail: config.fromEmail, accessCode: config.password, to, subject, body });
+    const { data } = await supabaseAdmin
+      .from('organizations')
+      .select('smtp_email, smtp_password')
+      .eq('id', profile.organizationId)
+      .single();
+
+    const smtpEmail = (data as { smtp_email: string | null; smtp_password: string | null } | null)?.smtp_email ?? null;
+    const smtpPassword = (data as { smtp_email: string | null; smtp_password: string | null } | null)?.smtp_password ?? null;
+
+    if (!smtpEmail || !smtpPassword) {
+      return NextResponse.json(
+        { message: 'El correo no está configurado. Ve a Configuración → CORREO y guarda tu Gmail y contraseña de app.' },
+        { status: 422 },
+      );
+    }
+
+    await sendMail({ fromEmail: smtpEmail, accessCode: smtpPassword, to, subject, body });
     return NextResponse.json({ message: 'Correo enviado.' });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Error desconocido.';

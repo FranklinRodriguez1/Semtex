@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { apiFetch } from '@/lib/api';
+import { localFetch } from '@/lib/api';
 
 interface EmailConfig {
   fromEmail: string | null;
@@ -17,7 +17,7 @@ export function EmailView() {
   const [configured, setConfigured] = useState(false);
 
   useEffect(() => {
-    apiFetch<EmailConfig>('/api/config/email')
+    localFetch<EmailConfig>('/api/config/email')
       .then((cfg) => {
         if (cfg.fromEmail) {
           setFromEmail(cfg.fromEmail);
@@ -32,7 +32,7 @@ export function EmailView() {
     setSaving(true);
     setError(null);
     try {
-      await apiFetch('/api/config/email', {
+      await localFetch('/api/config/email', {
         method: 'PUT',
         body: JSON.stringify({ fromEmail: fromEmail.trim(), password: password.trim() }),
       });
