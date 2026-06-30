@@ -1,12 +1,5 @@
 import { supabase } from "./supabase";
 
-export async function getAccessToken(): Promise<string | null> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  return session?.access_token ?? null;
-}
-
 export interface Claims {
   sub: string;
   email?: string;
@@ -16,7 +9,10 @@ export interface Claims {
 
 /** Decodifica (sin verificar) los claims del JWT de la sesión actual. */
 export async function getClaims(): Promise<Claims | null> {
-  const token = await getAccessToken();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const token = session?.access_token;
   if (!token) return null;
   try {
     const payload = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
@@ -26,12 +22,12 @@ export async function getClaims(): Promise<Claims | null> {
   }
 }
 
-/** GET a una ruta interna de Next (/api/...) con el Bearer de Supabase. */
+/**
+ * GET a una ruta interna de Next (/api/...).
+ * Las cookies de sesión se envían automáticamente en requests del mismo origen.
+ */
 export async function getInternal<T = unknown>(path: string): Promise<T> {
-  const token = await getAccessToken();
-  const res = await fetch(path, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  });
+  const res = await fetch(path, { credentials: "same-origin" });
   const data = res.status === 204 ? null : await res.json().catch(() => null);
   if (!res.ok) {
     throw new Error(
@@ -41,18 +37,18 @@ export async function getInternal<T = unknown>(path: string): Promise<T> {
   return data as T;
 }
 
-/** POST a una ruta interna de Next (/api/...) con el Bearer de Supabase. */
+/**
+ * POST a una ruta interna de Next (/api/...).
+ * Las cookies de sesión se envían automáticamente en requests del mismo origen.
+ */
 export async function postInternal<T = unknown>(
   path: string,
   body: unknown,
 ): Promise<T> {
-  const token = await getAccessToken();
   const res = await fetch(path, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
   const data = res.status === 204 ? null : await res.json().catch(() => null);

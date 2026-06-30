@@ -3,18 +3,14 @@
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { initializeThreeScene } from './animationHomeThree';
-import { getInternal } from '@/lib/session';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { useChat } from './useChat';
 import { useSpeech } from './useSpeech';
 import { listDocuments, type BackendDocument } from '@/app/view/transfer/services/transfer';
 
-interface Me {
-  isSuperAdmin: boolean;
-  role: string | null;
-}
-
 export default function HomeComponents() {
-  const [enabled, setEnabled] = useState(false);
+  const { role } = useAuth();
+  const enabled = role === 'ADMIN' || role === 'OPERATOR';
   const [input, setInput] = useState('');
   const [documents, setDocuments] = useState<BackendDocument[]>([]);
   const [selectedDocId, setSelectedDocId] = useState('');
@@ -22,6 +18,7 @@ export default function HomeComponents() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const spokenRef = useRef(0);
   const selectedDocRef = useRef(selectedDocId);
+  const threeRef = useRef<{ cleanup: () => void; setListening: (v: boolean) => void } | null>(null);
 
   useEffect(() => {
     selectedDocRef.current = selectedDocId;
@@ -46,17 +43,17 @@ export default function HomeComponents() {
   });
 
   useEffect(() => {
-    const cleanup = initializeThreeScene('three-sphere-scene');
+    const controls = initializeThreeScene('three-sphere-scene');
+    threeRef.current = controls;
     return () => {
-      cleanup?.();
+      controls.cleanup();
+      threeRef.current = null;
     };
   }, []);
 
   useEffect(() => {
-    getInternal<Me>('/api/me')
-      .then((me) => setEnabled(me.role === 'ADMIN' || me.role === 'OPERATOR'))
-      .catch(() => setEnabled(false));
-  }, []);
+    threeRef.current?.setListening(listening);
+  }, [listening]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -101,7 +98,7 @@ export default function HomeComponents() {
   const hasConversation = messages.length > 0 || sending || error !== null;
 
   return (
-    <div className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden bg-background">
+    <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-background">
       {/* Subtle background grid */}
       <div
         className="pointer-events-none absolute inset-0 opacity-5"
@@ -113,16 +110,15 @@ export default function HomeComponents() {
       />
 
       {/* Protagonist: AI Avatar Sphere */}
-      <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-center justify-center -mt-12">
-        {/* Holographic container */}
+      <div className="relative z-10 -mt-12">
         <div
           className="group relative flex h-[650px] w-[650px] items-center justify-center"
           id="canvas-container"
         >
-          {/* Ambient glow */}
+          {/* Ambient glow — turns red while listening */}
           <div
-            className="pulse-ring pointer-events-none absolute inset-0 rounded-full blur-[120px]"
-            style={{ backgroundColor: '#00dbe7' }}
+            className="pulse-ring pointer-events-none absolute inset-0 rounded-full blur-[120px] transition-colors duration-300"
+            style={{ backgroundColor: listening ? '#ef4444' : '#00dbe7' }}
           />
 
           {/* Three.js canvas */}
@@ -134,9 +130,11 @@ export default function HomeComponents() {
           {/* Inner ring */}
           <div className="pointer-events-none absolute left-1/2 top-1/2 h-[620px] w-[620px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-primary-fixed-dim opacity-[0.03] animate-[spin_40s_linear_infinite_reverse]" />
         </div>
+      </div>
 
-        {/* Interaction bar */}
-        <div className="relative z-30 mt-8 w-full max-w-4xl transition-all duration-300">
+      {/* Interaction bar — absolute bottom, always visible regardless of chat history height */}
+      <div className="absolute bottom-0 left-0 right-0 z-30 flex justify-center px-8 pb-6">
+        <div className="w-full max-w-4xl transition-all duration-300">
           {/* Conversation panel */}
           {hasConversation && (
             <div

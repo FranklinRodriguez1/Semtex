@@ -1,8 +1,8 @@
 import { getCaller, getCallerProfile, isSuperAdmin } from "@/lib/supabaseAdmin";
 
 /** GET /api/me — identidad del usuario actual para adaptar la UI. */
-export async function GET(request: Request) {
-  const caller = await getCaller(request);
+export async function GET() {
+  const caller = await getCaller();
   if (!caller) {
     return Response.json({ message: "No autenticado." }, { status: 401 });
   }

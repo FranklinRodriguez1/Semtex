@@ -8,7 +8,7 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const caller = await getCaller(request);
+  const caller = await getCaller();
   if (!caller) {
     return Response.json({ message: "No autenticado." }, { status: 401 });
   }
