@@ -10,6 +10,14 @@ import {
 import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { validateCurrentUser, type AuthUser } from "@/lib/auth-service";
+import { getInternal } from "@/lib/session";
+
+interface Me {
+  email: string | null;
+  isSuperAdmin: boolean;
+  role: string | null;
+  organizationId: string | null;
+}
 
 type AuthStatus = "checking" | "authenticated" | "unauthenticated";
 
@@ -18,6 +26,9 @@ interface AuthContextValue {
   status: AuthStatus;
   isAuthenticated: boolean;
   isChecking: boolean;
+  role: string | null;
+  isSuperAdmin: boolean;
+  organizationId: string | null;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -38,27 +49,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [status, setStatus] = useState<AuthStatus>("checking");
   const [isChecking, setIsChecking] = useState(true);
+  const [me, setMe] = useState<Me | null>(null);
 
+  // Runs ONCE on mount + on real Supabase auth events (login/logout).
+  // pathname is intentionally excluded — navigation must not re-trigger a full auth check.
   useEffect(() => {
     let active = true;
 
     async function syncAuthState() {
       setIsChecking(true);
 
-      const currentUser = await validateCurrentUser();
-      if (!active) {
-        return;
-      }
+      // Both calls run in parallel: getUser() validates server-side, /api/me fetches role.
+      const [currentUser, meData] = await Promise.all([
+        validateCurrentUser(),
+        getInternal<Me>("/api/me").catch(() => null),
+      ]);
 
-      setUser(currentUser);
+      if (!active) return;
+
+      setUser(currentUser ?? null);
+      setMe(currentUser ? meData : null);
       setStatus(currentUser ? "authenticated" : "unauthenticated");
-
-      if (!currentUser && isProtectedRoute(pathname)) {
-        router.replace(LOGIN_ROUTE);
-      } else if (currentUser && isLoginRoute(pathname)) {
-        router.replace(AFTER_AUTH_ROUTE);
-      }
-
       setIsChecking(false);
     }
 
@@ -74,7 +85,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       active = false;
       subscription.unsubscribe();
     };
-  }, [pathname, router]);
+  }, []);
+
+  // Redirect logic reacts to auth status OR pathname changes — does not re-validate auth.
+  useEffect(() => {
+    if (isChecking) return;
+    if (!user && isProtectedRoute(pathname)) {
+      router.replace(LOGIN_ROUTE);
+    } else if (user && isLoginRoute(pathname)) {
+      router.replace(AFTER_AUTH_ROUTE);
+    }
+  }, [status, pathname, router, isChecking, user]);
 
   return (
     <AuthContext.Provider
@@ -83,6 +104,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         status,
         isAuthenticated: status === "authenticated",
         isChecking,
+        role: me?.role ?? null,
+        isSuperAdmin: me?.isSuperAdmin ?? false,
+        organizationId: me?.organizationId ?? null,
       }}
     >
       {children}

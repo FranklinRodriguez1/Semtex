@@ -1,15 +1,8 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { getInternal } from "@/lib/session";
-
-interface Me {
-  email: string | null;
-  isSuperAdmin: boolean;
-  role: string | null;
-  organizationId: string | null;
-}
+import { useAuth } from "@/components/auth/AuthProvider";
 
 /**
  * Protege una página por rol. La seguridad REAL la aplica el backend (403);
@@ -19,8 +12,7 @@ interface Me {
  * - `roles`: roles de la organización permitidos (ADMIN/OPERATOR/AUDITOR).
  * - `superAdminOnly`: si es true, solo el super-admin de la plataforma entra.
  *
- * El rol se lee de /api/me (fuente: public.users), así que no depende de que el
- * JWT traiga claims.
+ * Lee role/isSuperAdmin del AuthProvider (ya cargados en mount) — sin llamadas extra.
  */
 export function RoleGuard({
   roles,
@@ -31,28 +23,10 @@ export function RoleGuard({
   superAdminOnly?: boolean;
   children: ReactNode;
 }) {
+  const { isChecking, isAuthenticated, role, isSuperAdmin } = useAuth();
   const router = useRouter();
-  const [state, setState] = useState<"loading" | "ok" | "denied">("loading");
 
-  useEffect(() => {
-    let active = true;
-    async function check() {
-      const me = await getInternal<Me>("/api/me").catch(() => null);
-      if (!active) return;
-      const allowed = me
-        ? superAdminOnly
-          ? me.isSuperAdmin
-          : me.role != null && (roles?.includes(me.role) ?? false)
-        : false;
-      setState(allowed ? "ok" : "denied");
-    }
-    void check();
-    return () => {
-      active = false;
-    };
-  }, [roles, superAdminOnly]);
-
-  if (state === "loading") {
+  if (isChecking) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black text-[11px] uppercase tracking-[0.2em] text-[#3a494b]">
         Verificando acceso…
@@ -60,7 +34,13 @@ export function RoleGuard({
     );
   }
 
-  if (state === "denied") {
+  const allowed =
+    isAuthenticated &&
+    (superAdminOnly
+      ? isSuperAdmin
+      : role != null && (roles?.includes(role) ?? false));
+
+  if (!allowed) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-black text-center">
         <p className="text-[14px] uppercase tracking-[0.2em] text-[#EF4444]">

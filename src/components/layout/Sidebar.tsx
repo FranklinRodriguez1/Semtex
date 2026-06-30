@@ -1,30 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { getInternal } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
-
-interface Me {
-  email: string | null;
-  isSuperAdmin: boolean;
-  role: string | null;
-  organizationId: string | null;
-}
 
 export function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
-  const { user } = useAuth();
-  const [me, setMe] = useState<Me | null>(null);
-
-  useEffect(() => {
-    getInternal<Me>("/api/me")
-      .then(setMe)
-      .catch(() => setMe(null));
-  }, []);
+  const { user, role, isSuperAdmin } = useAuth();
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -51,7 +35,7 @@ export function Sidebar() {
           >
             <span className="text-base">⌁</span> Home
           </Link>
-          {(me?.role === "ADMIN" || me?.role === "OPERATOR") && (
+          {(role === "ADMIN" || role === "OPERATOR") && (
             <Link
               className={`flex items-center gap-3 rounded px-4 py-3 text-sm transition-colors ${
                 isActive("/view/transfer")
@@ -63,7 +47,7 @@ export function Sidebar() {
               <span className="text-base">•</span> Upload - Receive
             </Link>
           )}
-          {me?.isSuperAdmin && (
+          {isSuperAdmin && (
             <Link
               className={`flex items-center gap-3 rounded px-4 py-3 text-sm transition-colors ${
                 isActive("/view/configuration")
@@ -75,7 +59,7 @@ export function Sidebar() {
               <span className="text-base">⚙</span> Config
             </Link>
           )}
-          {me?.role === "ADMIN" && (
+          {role === "ADMIN" && (
             <Link
               className={`flex items-center gap-3 rounded px-4 py-3 text-sm transition-colors ${
                 isActive("/view/team")
@@ -87,7 +71,7 @@ export function Sidebar() {
               <span className="text-base">👥</span> Usuarios
             </Link>
           )}
-          {me?.isSuperAdmin && (
+          {isSuperAdmin && (
             <Link
               className={`flex items-center gap-3 rounded px-4 py-3 text-sm transition-colors ${
                 isActive("/view/admin")
@@ -99,7 +83,7 @@ export function Sidebar() {
               <span className="text-base">🏢</span> Empresas
             </Link>
           )}
-          {(me?.role === "ADMIN" || me?.role === "AUDITOR") && (
+          {(role === "ADMIN" || role === "AUDITOR") && (
             <Link
               className={`flex items-center gap-3 rounded px-4 py-3 text-sm transition-colors ${
                 isActive("/audit")
@@ -117,10 +101,10 @@ export function Sidebar() {
         {user?.email && (
           <p className="px-4 text-[10px] text-[#b9cacb] truncate" title={user.email}>
             {user.name} · {user.email}
-            {me?.isSuperAdmin ? " · SUPER-ADMIN" : me?.role ? ` · ${me.role}` : ""}
+            {isSuperAdmin ? " · SUPER-ADMIN" : role ? ` · ${role}` : ""}
           </p>
         )}
-        {me?.isSuperAdmin && (
+        {isSuperAdmin && (
           <Link
             className="flex items-center gap-3 rounded px-4 py-3 text-sm text-[#b9cacb] hover:bg-[#201f21]"
             href="/view/configuration"

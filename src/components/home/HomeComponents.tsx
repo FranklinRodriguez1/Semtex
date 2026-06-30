@@ -3,18 +3,14 @@
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { initializeThreeScene } from './animationHomeThree';
-import { getInternal } from '@/lib/session';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { useChat } from './useChat';
 import { useSpeech } from './useSpeech';
 import { listDocuments, type BackendDocument } from '@/app/view/transfer/services/transfer';
 
-interface Me {
-  isSuperAdmin: boolean;
-  role: string | null;
-}
-
 export default function HomeComponents() {
-  const [enabled, setEnabled] = useState(false);
+  const { role } = useAuth();
+  const enabled = role === 'ADMIN' || role === 'OPERATOR';
   const [input, setInput] = useState('');
   const [documents, setDocuments] = useState<BackendDocument[]>([]);
   const [selectedDocId, setSelectedDocId] = useState('');
@@ -58,12 +54,6 @@ export default function HomeComponents() {
   useEffect(() => {
     threeRef.current?.setListening(listening);
   }, [listening]);
-
-  useEffect(() => {
-    getInternal<Me>('/api/me')
-      .then((me) => setEnabled(me.role === 'ADMIN' || me.role === 'OPERATOR'))
-      .catch(() => setEnabled(false));
-  }, []);
 
   useEffect(() => {
     if (!enabled) return;
