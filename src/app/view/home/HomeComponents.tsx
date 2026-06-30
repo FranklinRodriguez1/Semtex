@@ -7,9 +7,6 @@ import { getInternal } from '@/lib/session';
 import { useChat } from './hooks/useChat';
 import { useSpeech } from './hooks/useSpeech';
 import { listDocuments, type BackendDocument } from '@/app/view/transfer/services/transfer';
-import { sendMessage } from './services/chatService';
-import { getMailCredentials } from '@/app/view/configuration/EmailView';
-
 type EmailStep = 'asking_to' | 'asking_subject' | 'asking_body' | 'confirming';
 
 interface EmailState {
@@ -17,7 +14,6 @@ interface EmailState {
   to: string;
   subject: string;
   body: string;
-  improvedBody: string;
 }
 
 interface Me {
@@ -102,30 +98,15 @@ export default function HomeComponents() {
       }
 
       if (state.step === 'asking_body') {
-        injectMessage(`Tú: ${trimmed}`);
-        const processingMsg = 'Dame un momento, estoy preparando una versión mejorada…';
-        say(processingMsg, speak);
-
-        let improved = trimmed;
-        try {
-          const res = await sendMessage(
-            `Eres un asistente de redacción. Mejora este correo de forma profesional y concisa manteniendo el mismo mensaje. Devuelve SOLO el texto mejorado del cuerpo, sin explicaciones ni saludos adicionales:\n\n${trimmed}`
-          );
-          improved = res.agentResponse;
-        } catch {
-          // Si falla la IA, usamos el original
-        }
-
-        const newState: EmailState = { ...state, body: trimmed, improvedBody: improved, step: 'confirming' };
+        const newState: EmailState = { ...state, body: trimmed, step: 'confirming' };
         emailRef.current = newState;
-
+        injectMessage(`Tú: ${trimmed}`);
         const summary =
           `Esto es lo que voy a enviar:\n\n` +
           `Para: ${newState.to}\n` +
           `Asunto: ${newState.subject}\n` +
           `Mensaje: ${trimmed}\n\n` +
-          `También tengo una versión mejorada:\n"${improved}"\n\n` +
-          `¿Está bien así? Di "enviar" para enviar el original, "mejorado" para usar la versión mejorada, o "cancelar" para cancelar.`;
+          `¿Está bien así? Di "enviar" para confirmar o "cancelar" para cancelar.`;
         say(summary, speak);
         return;
       }
@@ -140,44 +121,22 @@ export default function HomeComponents() {
           return;
         }
 
-        let bodyToSend = state.body;
-        if (lower.includes('mejorad') || lower.includes('mejor') || lower.includes('versión')) {
-          bodyToSend = state.improvedBody;
-        } else if (!lower.includes('enviar') && !lower.includes('sí') && !lower.includes('si') && !lower.includes('ok')) {
-          say('No entendí. Di "enviar" para el original, "mejorado" para la versión mejorada, o "cancelar".', speak);
+        if (!lower.includes('enviar') && !lower.includes('sí') && !lower.includes('si') && !lower.includes('ok')) {
+          say('No entendí. Di "enviar" para confirmar o "cancelar" para cancelar.', speak);
           return;
         }
 
-        const creds = getMailCredentials();
-        if (!creds) {
-          say('No encontré credenciales de correo. Ve a Configuración → CORREO y guarda tu email y código de acceso primero.', speak);
-          emailRef.current = null;
-          return;
-        }
-
-        try {
-          const res = await fetch('/api/mail', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...creds, to: state.to, subject: state.subject, body: bodyToSend }),
-          });
-          if (!res.ok) {
-            const data = await res.json() as { message?: string };
-            throw new Error(data.message ?? 'Error al enviar.');
-          }
-          emailRef.current = null;
-          say(`¡Correo enviado correctamente a ${state.to}! ¿En qué más puedo ayudarte?`, speak);
-        } catch (err) {
-          say(`Error al enviar el correo: ${(err as Error).message}`, speak);
-          emailRef.current = null;
-        }
+        const prompt =
+          `Envía un correo electrónico a ${state.to} con asunto "${state.subject}" y el siguiente mensaje:\n\n${state.body}`;
+        emailRef.current = null;
+        void send(prompt, selectedDocRef.current || undefined);
         return;
       }
     }
 
     // —— Intent de email: iniciar flujo ——
     if (isEmailIntent(trimmed)) {
-      emailRef.current = { step: 'asking_to', to: '', subject: '', body: '', improvedBody: '' };
+      emailRef.current = { step: 'asking_to', to: '', subject: '', body: '' };
       injectMessage(`Tú: ${trimmed}`);
       const msg = 'Claro, vamos a redactar el correo. ¿A qué dirección de email quieres enviarlo?';
       say(msg, speak);

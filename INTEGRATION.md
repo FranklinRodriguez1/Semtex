@@ -146,12 +146,35 @@ Formato de error uniforme: `{ timestamp, status, error, message, path, fieldErro
 Cada usuario carga su `org_id` en el token. El backend filtra **toda** consulta por ese
 `org_id`. Un usuario nunca ve datos de otra empresa, y no hace falta filtrar en el front.
 
+## Envío de correos (backend agent)
+
+El correo se delega al agente LangChain4j del backend mediante la herramienta
+`enviarCorreo`. El front le pasa al agente un prompt del estilo:
+
+> "Envía un correo electrónico a destinatario@ejemplo.com con asunto '...' y el siguiente mensaje: ..."
+
+El agente invoca `SemtexAgentTools.enviarCorreo` usando `spring.mail.*`.
+
+**Variables requeridas en Render para el envío de correos:**
+
+```
+SPRING_MAIL_HOST=smtp.gmail.com
+SPRING_MAIL_PORT=587
+SPRING_MAIL_USERNAME=tu-cuenta@gmail.com
+SPRING_MAIL_PASSWORD=<contraseña de aplicación de Gmail>
+SEMTEX_EMAIL_FROM=tu-cuenta@gmail.com
+```
+
+> `SPRING_MAIL_PASSWORD` debe ser una **contraseña de aplicación** (no la contraseña
+> de la cuenta). Generarla en Gmail → Seguridad → Verificación en 2 pasos → Contraseñas de apps.
+
+No hay configuración SMTP en el frontend. La UI de Configuración muestra solo información.
+
 ## Pendiente / por hacer
 
-- Cablear subida de documentos (`/view/transfer` → `POST /api/documents`) y la tabla de
-  `financial-records`.
-- Pantalla de Chat IA (`/api/chat/messages`).
-- Pantalla de Auditoría (`/api/audit/logs`).
+- ✅ Subida de documentos y tabla de `financial-records` — cableado.
+- ✅ Chat IA (`/api/chat/messages`) — cableado.
+- ✅ Auditoría (`/api/audit/logs`) — cableado.
 
 ## ⚠️ Fix de CORS — agregar dominio de Vercel
 

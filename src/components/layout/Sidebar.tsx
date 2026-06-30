@@ -102,11 +102,11 @@ export function Sidebar() {
           {(me?.role === "ADMIN" || me?.role === "AUDITOR") && (
             <Link
               className={`flex items-center gap-3 rounded px-4 py-3 text-sm transition-colors ${
-                isActive("/audit")
+                isActive("/view/audit")
                   ? "border-l-2 border-[#74f5ff] bg-[#201f21] text-[#E5E1E4] font-semibold"
                   : "text-[#b9cacb] hover:bg-[#201f21]"
               }`}
-              href="/audit"
+              href="/view/audit"
             >
               <span className="text-base">⚖</span> Audit
             </Link>
