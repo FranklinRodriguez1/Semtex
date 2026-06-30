@@ -114,6 +114,7 @@ export function initializeThreeScene(containerId: string) {
   animate();
 
   function handleResize() {
+    if (!container) return;
     const w = container.clientWidth;
     const h = container.clientHeight;
 

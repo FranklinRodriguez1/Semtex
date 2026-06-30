@@ -11,7 +11,19 @@ export interface Claims {
   sub: string;
   email?: string;
   org_id?: string;
+  /** El hook de Supabase puede inyectar el rol como "app_role" o como "role". */
   app_role?: string;
+  role?: string;
+}
+
+/**
+ * Devuelve el rol normalizado desde los claims del JWT, independientemente de si el
+ * hook de Supabase lo inyectó como "app_role" o como "role".
+ * En Render: si el backend usa semtex.jwt.role-claim=role (defecto), el hook debe
+ * inyectar el claim como "role". Si usa "app_role", configurar semtex.jwt.role-claim=app_role.
+ */
+export function getRoleFromClaims(claims: Claims | null): string | undefined {
+  return claims?.app_role ?? claims?.role ?? undefined;
 }
 
 /** Decodifica (sin verificar) los claims del JWT de la sesión actual. */

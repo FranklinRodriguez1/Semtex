@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { getClaims, type Claims } from "@/lib/session";
+import { getClaims, getRoleFromClaims, type Claims } from "@/lib/session";
 import { listUsers, inviteUser, type BackendUser } from "./services/team";
 
 export function TeamContainer() {
@@ -59,7 +59,7 @@ export function TeamContainer() {
     }
   }
 
-  const isAdmin = claims?.app_role === "ADMIN";
+  const isAdmin = getRoleFromClaims(claims) === "ADMIN";
 
   return (
     <div className="min-h-full bg-[#000000] p-8 text-[#E5E1E4]">
@@ -75,7 +75,7 @@ export function TeamContainer() {
 
         {!isAdmin && (
           <p className="mb-6 rounded-lg border border-[#F97316]/40 bg-[#F97316]/10 px-3 py-2 text-[11px] text-[#F97316]">
-            Solo un ADMIN puede agregar empleados. Tu rol: {claims?.app_role ?? "—"}.
+            Solo un ADMIN puede agregar empleados. Tu rol: {getRoleFromClaims(claims) ?? "—"}.
           </p>
         )}
 
