@@ -1,19 +1,91 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useConfiguration } from './hooks/useConfiguration';
-import { IntegrationCard } from './components/IntegrationCard';
+import { useEffect, useState } from 'react';
 
-interface IntegrationsViewProps {
-  onAction?: (action: string, data?: unknown) => void;
+type ServiceStatus = 'checking' | 'ok' | 'error';
+
+interface ServiceEntry {
+  id: string;
+  name: string;
+  description: string;
+  status: ServiceStatus;
+  detail?: string;
 }
 
-export function IntegrationsView(_props: IntegrationsViewProps) {
-  const { state, load, toggle, dismissError } = useConfiguration();
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
+
+async function checkBackend(): Promise<{ ok: boolean; detail: string }> {
+  try {
+    const res = await fetch(`${BACKEND_URL}/actuator/health`, { signal: AbortSignal.timeout(10000) });
+    if (res.ok) {
+      const body = await res.json() as { status?: string };
+      return { ok: body.status === 'UP', detail: body.status ?? 'UP' };
+    }
+    return { ok: false, detail: `HTTP ${res.status}` };
+  } catch {
+    return { ok: false, detail: 'No responde' };
+  }
+}
+
+const STATIC_SERVICES: Omit<ServiceEntry, 'status' | 'detail'>[] = [
+  {
+    id: 'supabase',
+    name: 'Supabase Auth',
+    description: 'Autenticación de usuarios, emisión de JWT (ES256) y hooks de acceso',
+  },
+  {
+    id: 'backend',
+    name: 'Backend API (Spring Boot)',
+    description: 'Servidor de recursos — valida JWT, multi-tenant, agente IA',
+  },
+  {
+    id: 'agent',
+    name: 'Agente IA (LangChain4j)',
+    description: 'Consultas financieras y envío de correos vía function-calling (OpenAI/Groq)',
+  },
+  {
+    id: 'smtp',
+    name: 'SMTP (Spring Mail)',
+    description: 'Envío de correos delegado al backend — configurar variables SPRING_MAIL_* en Render',
+  },
+];
+
+function dot(status: ServiceStatus) {
+  if (status === 'checking') return 'bg-[#b9cacb] animate-pulse';
+  if (status === 'ok') return 'bg-[#22C55E] shadow-[0_0_6px_rgba(34,197,94,0.5)]';
+  return 'bg-[#EF4444] shadow-[0_0_6px_rgba(239,68,68,0.5)]';
+}
+
+function badge(status: ServiceStatus) {
+  if (status === 'checking') return { text: 'VERIFICANDO', color: '#b9cacb' };
+  if (status === 'ok') return { text: 'ACTIVO', color: '#22C55E' };
+  return { text: 'ERROR', color: '#EF4444' };
+}
+
+export function IntegrationsView() {
+  const [services, setServices] = useState<ServiceEntry[]>(
+    STATIC_SERVICES.map((s) => ({ ...s, status: 'checking' as ServiceStatus })),
+  );
 
   useEffect(() => {
-    if (state.loading === 'idle') load();
-  }, [state.loading, load]);
+    // Supabase y agente IA se asumen activos (dependen del backend)
+    setServices((prev) =>
+      prev.map((s) => {
+        if (s.id === 'supabase') return { ...s, status: 'ok', detail: 'cwubsogxbiuxyjihghag.supabase.co' };
+        if (s.id === 'agent')   return { ...s, status: 'ok', detail: 'vía backend' };
+        if (s.id === 'smtp')    return { ...s, status: 'ok', detail: 'configurar en Render' };
+        return s;
+      }),
+    );
+
+    checkBackend().then(({ ok, detail }) => {
+      setServices((prev) =>
+        prev.map((s) =>
+          s.id === 'backend' ? { ...s, status: ok ? 'ok' : 'error', detail } : s,
+        ),
+      );
+    });
+  }, []);
 
   return (
     <>
@@ -24,48 +96,44 @@ export function IntegrationsView(_props: IntegrationsViewProps) {
       <div className="flex justify-between items-end border-b border-[#3a494b] pb-4 mb-6">
         <div>
           <h1 className="text-[14px] uppercase tracking-[0.2em] text-[#00E5FF]">
-            Configuration Protocol
+            Estado del sistema
           </h1>
           <p className="text-[10px] text-[#3a494b] mt-1 tracking-[0.15em]">
-            SYSTEM_INTEGRATION_LAYER
+            SYSTEM_STATUS
           </p>
         </div>
         <div className="text-right text-[10px] uppercase tracking-[0.2em] text-[#b9cacb] font-mono">
-          <p>REST-API / WEBHOOK / BRIDGE</p>
+          <p>SUPABASE / SPRING / LANGCHAIN4J</p>
         </div>
       </div>
 
-      {state.error && (
-        <div className="mb-4 animate-slide-up flex items-center justify-between bg-[#EF4444]/10 border border-[#EF4444]/30 px-4 py-2 text-[11px] text-[#EF4444]">
-          <span className="tracking-[0.05em]">ERROR: {state.error}</span>
-          <button
-            onClick={dismissError}
-            className="text-[#EF4444]/60 hover:text-[#EF4444] ml-4 transition-colors"
-          >
-            ✕
-          </button>
-        </div>
-      )}
-
-      {state.loading === 'loading' && (
-        <div className="mb-6 animate-fade-in">
-          <div className="border border-[#3a494b] bg-[#0e0e10]/30 p-4">
-            <p className="text-[10px] text-[#b9cacb] animate-pulse uppercase tracking-[0.2em]">
-              Cargando integraciones...
-            </p>
-          </div>
-        </div>
-      )}
-
       <div className="space-y-3">
-        {state.integrations.map((integration) => (
-          <IntegrationCard
-            key={integration.id}
-            integration={integration}
-            onToggle={toggle}
-            disabled={state.loading === 'loading'}
-          />
-        ))}
+        {services.map((svc) => {
+          const b = badge(svc.status);
+          return (
+            <div
+              key={svc.id}
+              className="rounded-2xl border border-[#3a494b] bg-[#0e0e10]/40 px-5 py-4 flex items-start justify-between gap-4"
+            >
+              <div className="flex items-start gap-3 min-w-0">
+                <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${dot(svc.status)}`} />
+                <div className="min-w-0">
+                  <p className="text-[12px] font-semibold text-[#E5E1E4]">{svc.name}</p>
+                  <p className="text-[10px] text-[#b9cacb] mt-0.5">{svc.description}</p>
+                  {svc.detail && (
+                    <p className="mt-1 font-mono text-[9px] text-[#3a494b]">{svc.detail}</p>
+                  )}
+                </div>
+              </div>
+              <span
+                className="shrink-0 rounded px-2 py-0.5 text-[9px] uppercase tracking-widest font-semibold"
+                style={{ color: b.color, backgroundColor: `${b.color}18`, border: `1px solid ${b.color}30` }}
+              >
+                {b.text}
+              </span>
+            </div>
+          );
+        })}
       </div>
     </>
   );

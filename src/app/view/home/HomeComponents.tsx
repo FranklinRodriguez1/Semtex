@@ -82,7 +82,7 @@ export default function HomeComponents() {
       if (state.step === 'asking_to') {
         const newState: EmailState = { ...state, to: trimmed, step: 'asking_subject' };
         emailRef.current = newState;
-        injectMessage(`Tú: ${trimmed}`);
+        injectMessage(trimmed, 'USER');
         const msg = `Entendido, el correo irá a ${trimmed}.\n¿Cuál es el asunto?`;
         say(msg, speak);
         return;
@@ -91,7 +91,7 @@ export default function HomeComponents() {
       if (state.step === 'asking_subject') {
         const newState: EmailState = { ...state, subject: trimmed, step: 'asking_body' };
         emailRef.current = newState;
-        injectMessage(`Tú: ${trimmed}`);
+        injectMessage(trimmed, 'USER');
         const msg = 'Perfecto. ¿Qué quieres decir en el cuerpo del mensaje?';
         say(msg, speak);
         return;
@@ -100,7 +100,7 @@ export default function HomeComponents() {
       if (state.step === 'asking_body') {
         const newState: EmailState = { ...state, body: trimmed, step: 'confirming' };
         emailRef.current = newState;
-        injectMessage(`Tú: ${trimmed}`);
+        injectMessage(trimmed, 'USER');
         const summary =
           `Esto es lo que voy a enviar:\n\n` +
           `Para: ${newState.to}\n` +
@@ -113,7 +113,7 @@ export default function HomeComponents() {
 
       if (state.step === 'confirming') {
         const lower = trimmed.toLowerCase();
-        injectMessage(`Tú: ${trimmed}`);
+        injectMessage(trimmed, 'USER');
 
         if (lower.includes('cancelar') || lower.includes('cancel')) {
           emailRef.current = null;
@@ -137,7 +137,7 @@ export default function HomeComponents() {
     // —— Intent de email: iniciar flujo ——
     if (isEmailIntent(trimmed)) {
       emailRef.current = { step: 'asking_to', to: '', subject: '', body: '' };
-      injectMessage(`Tú: ${trimmed}`);
+      injectMessage(trimmed, 'USER');
       const msg = 'Claro, vamos a redactar el correo. ¿A qué dirección de email quieres enviarlo?';
       say(msg, speak);
       return;

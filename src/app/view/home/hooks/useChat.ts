@@ -48,22 +48,39 @@ export function useChat(enabled: boolean) {
     setError(null);
     setMessages((prev) => [...prev, { role: 'USER', content: text }]);
     setSending(true);
+
+    // Aviso de cold start si el backend tarda más de 8s (Render Free tier).
+    const coldStartTimer = setTimeout(() => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'ASSISTANT' as MessageRole,
+          content:
+            'El servidor está iniciando (plan gratuito de Render). Esto puede tardar hasta 30 segundos la primera vez — ya casi está…',
+        },
+      ]);
+    }, 8000);
+
     try {
       const res = await sendMessage(text, documentId);
+      clearTimeout(coldStartTimer);
       setMessages((prev) => [...prev, { role: 'ASSISTANT', content: res.agentResponse }]);
       replyCount.current += 1;
       setLastReply({ text: res.agentResponse, n: replyCount.current });
     } catch (err) {
+      clearTimeout(coldStartTimer);
       setError((err as Error).message);
     } finally {
       setSending(false);
     }
   }, []);
 
-  const injectMessage = useCallback((content: string) => {
-    setMessages((prev) => [...prev, { role: 'ASSISTANT' as MessageRole, content }]);
-    replyCount.current += 1;
-    setLastReply({ text: content, n: replyCount.current });
+  const injectMessage = useCallback((content: string, role: MessageRole = 'ASSISTANT') => {
+    setMessages((prev) => [...prev, { role, content }]);
+    if (role === 'ASSISTANT') {
+      replyCount.current += 1;
+      setLastReply({ text: content, n: replyCount.current });
+    }
   }, []);
 
   return { messages, sending, error, send, lastReply, injectMessage };
