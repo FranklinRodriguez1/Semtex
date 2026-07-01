@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Semtex — Copiloto Administrativo y Financiero con IA</title>
+  <meta name="description" content="Semtex: agentes autónomos de IA que convierten tus datos financieros en acción instantánea." />
+  <link rel="icon" href="assets/logo.png" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <nav class="nav">
+    <a href="#hero" class="nav-brand">
+      <img src="assets/logo.png" alt="Semtex" />
+      <span data-i18n="nav.brand">SEMTEX</span>
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="#problem" data-i18n="nav.problem">Problema</a></li>
+      <li><a href="#architecture" data-i18n="nav.architecture">Arquitectura</a></li>
+      <li><a href="#market" data-i18n="nav.market">Mercado</a></li>
+      <li><a href="#features" data-i18n="nav.features">Funciones</a></li>
+      <li><a href="#advantage" data-i18n="nav.advantage">Ventaja</a></li>
+      <li><a href="#future" data-i18n="nav.future">Visión</a></li>
+    </ul>
+
+    <div class="nav-actions">
+      <div class="lang-toggle">
+        <button type="button" data-lang="es">ES</button>
+        <button type="button" data-lang="en">EN</button>
+      </div>
+      <button type="button" class="nav-toggle" aria-label="Abrir menú">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+    </div>
+  </nav>
+
+  <main>
+
+    <!-- HERO -->
+    <section id="hero" class="hero">
+      <div class="hero-bg">
+        <span class="pulse-ring pulse-ring--1"></span>
+        <span class="pulse-ring pulse-ring--2"></span>
+        <span class="pulse-ring pulse-ring--3"></span>
+      </div>
+      <div class="hero-content">
+        <p class="eyebrow" data-i18n="hero.eyebrow">Copiloto administrativo y financiero con IA</p>
+        <h1 data-i18n="hero.title" data-i18n-html>De datos dispersos a <span>acción autónoma</span>, sin fricción.</h1>
+        <p data-i18n="hero.subtitle">La brecha entre recolectar datos y ejecutar decisiones es el freno silencioso del crecimiento empresarial.</p>
+        <div class="hero-actions">
+          <a href="#architecture" class="btn btn--primary">
+            <span class="material-symbols-outlined">architecture</span>
+            <span data-i18n="hero.cta_primary">Ver la arquitectura</span>
+          </a>
+          <a href="#features" class="btn btn--ghost">
+            <span class="material-symbols-outlined">bolt</span>
+            <span data-i18n="hero.cta_secondary">Funciones clave</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROBLEMA -->
+    <section id="problem" class="section">
+      <div class="section-head reveal">
+        <p class="eyebrow is-orange" data-i18n="problem.eyebrow">El problema</p>
+        <h2 data-i18n="problem.title">La fricción silenciosa que frena a las PyMEs en crecimiento</h2>
+        <p data-i18n="problem.subtitle">Piensa en la última vez que una decisión crítica se retrasó porque un reporte no estaba listo.</p>
+      </div>
+      <div class="problem-grid">
+        <div class="problem-card reveal">
+          <span class="material-symbols-outlined">schedule</span>
+          <h3 data-i18n="problem.card1.title">Reportes que llegan tarde</h3>
+          <p data-i18n="problem.card1.body">Los datos financieros viven dispersos en hojas de cálculo.</p>
+        </div>
+        <div class="problem-card reveal">
+          <span class="material-symbols-outlined">mail</span>
+          <h3 data-i18n="problem.card2.title">Comunicación que se pierde</h3>
+          <p data-i18n="problem.card2.body">Correos corporativos clave se traspapelan.</p>
+        </div>
+        <div class="problem-card reveal">
+          <span class="material-symbols-outlined">groups</span>
+          <h3 data-i18n="problem.card3.title">Crecer sin más nómina</h3>
+          <p data-i18n="problem.card3.body">Escalar hoy implica contratar más personal administrativo.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ARQUITECTURA -->
+    <section id="architecture" class="section section--alt">
+      <div class="section-head reveal">
+        <p class="eyebrow" data-i18n="architecture.eyebrow">Arquitectura técnica</p>
+        <h2 data-i18n="architecture.title">Un motor de automatización con agentes de IA autónomos</h2>
+        <p data-i18n="architecture.subtitle">El frontend usa Next.js con arquitectura Feature-Driven; el backend corre en Java.</p>
+      </div>
+
+      <div class="arch-diagram glass-panel reveal">
+        <div class="arch-box" data-i18n="architecture.diagram.frontend">Frontend
+(Next.js 16)</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box" data-i18n="architecture.diagram.auth">Supabase Auth
+(JWT ES256)</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box" data-i18n="architecture.diagram.backend">Backend Spring
+(Java, Render)</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box" data-i18n="architecture.diagram.db">Postgres
+(Supabase)</div>
+      </div>
+
+      <div class="stack-grid">
+        <div class="stack-item reveal">
+          <span class="eyebrow" data-i18n="architecture.stack1.title">Frontend táctico</span>
+          <p data-i18n="architecture.stack1.body">Next.js + Feature-Driven Design.</p>
+        </div>
+        <div class="stack-item reveal">
+          <span class="eyebrow" data-i18n="architecture.stack2.title">Backend empresarial</span>
+          <p data-i18n="architecture.stack2.body">Java / Spring Boot como servicio independiente.</p>
+        </div>
+        <div class="stack-item reveal">
+          <span class="eyebrow" data-i18n="architecture.stack3.title">Multi-tenant y RBAC</span>
+          <p data-i18n="architecture.stack3.body">Aislamiento estricto de datos por empresa.</p>
+        </div>
+        <div class="stack-item reveal">
+          <span class="eyebrow" data-i18n="architecture.stack4.title">Servicios independientes</span>
+          <p data-i18n="architecture.stack4.body">Frontend y backend escalan por separado.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- MERCADO -->
+    <section id="market" class="section">
+      <div class="section-head reveal">
+        <p class="eyebrow is-orange" data-i18n="market.eyebrow">Mercado y modelo de negocio</p>
+        <h2 data-i18n="market.title">Construido para empresas de alto crecimiento y alto volumen</h2>
+        <p data-i18n="market.subtitle">Semtex sirve a CFOs y gerentes de operaciones.</p>
+      </div>
+      <div class="market-layout">
+        <ul class="market-list reveal">
+          <li><span class="material-symbols-outlined">trending_up</span><span data-i18n="market.item1">Empresas de alto crecimiento con volúmenes transaccionales crecientes.</span></li>
+          <li><span class="material-symbols-outlined">insights</span><span data-i18n="market.item2">CFOs que necesitan claridad financiera en tiempo real.</span></li>
+          <li><span class="material-symbols-outlined">groups</span><span data-i18n="market.item3">Gerentes de operaciones que buscan escalar impacto sin escalar headcount.</span></li>
+          <li><span class="material-symbols-outlined">bolt</span><span data-i18n="market.item4">Equipos administrativos y financieros que hoy pierden horas en tareas repetitivas.</span></li>
+        </ul>
+        <blockquote class="market-quote glass-panel reveal" data-i18n="market.quote">
+          "Cerramos la brecha entre el potencial técnico y la realidad operativa."
+        </blockquote>
+      </div>
+    </section>
+
+    <!-- FUNCIONES CLAVE -->
+    <section id="features" class="section section--alt">
+      <div class="section-head reveal">
+        <p class="eyebrow" data-i18n="features.eyebrow">Funciones clave</p>
+        <h2 data-i18n="features.title">De la bandeja de entrada a la hoja de cálculo, todo automatizado</h2>
+        <p data-i18n="features.subtitle">Dos agentes de IA que convierten el trabajo repetitivo en un activo estratégico.</p>
+      </div>
+      <div class="feature-grid">
+        <article class="feature-card glass-panel reveal">
+          <img src="assets/console.png" alt="Automatización de correo" />
+          <h3 data-i18n="features.email.title">Agente de automatización de correo</h3>
+          <p data-i18n="features.email.body">Elimina la carga manual de clasificar, filtrar y responder correos.</p>
+          <ul>
+            <li data-i18n="features.email.item1">Redacción y envío automático de correos corporativos.</li>
+            <li data-i18n="features.email.item2">Orquestación por Function Calling desde el chat.</li>
+            <li data-i18n="features.email.item3">Configuración SMTP propia por organización.</li>
+          </ul>
+        </article>
+        <article class="feature-card glass-panel reveal">
+          <img src="assets/upload.png" alt="Análisis financiero" />
+          <h3 data-i18n="features.finance.title">Análisis financiero impulsado por IA</h3>
+          <p data-i18n="features.finance.body">Normaliza datos financieros crudos y extrae insights accionables.</p>
+          <ul>
+            <li data-i18n="features.finance.item1">Carga drag-and-drop de Excel (.xlsx/.xls) y CSV.</li>
+            <li data-i18n="features.finance.item2">Consultas en lenguaje natural sobre balances e ingresos.</li>
+            <li data-i18n="features.finance.item3">Comparativas financieras temporales al instante.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <!-- VENTAJA COMPETITIVA -->
+    <section id="advantage" class="section">
+      <div class="section-head reveal">
+        <p class="eyebrow is-orange" data-i18n="advantage.eyebrow">Ventaja competitiva</p>
+        <h2 data-i18n="advantage.title">Semtex entiende y actúa</h2>
+        <p data-i18n="advantage.subtitle">A diferencia de las plataformas tradicionales que funcionan como bodegas estáticas de datos.</p>
+      </div>
+      <div class="advantage-compare">
+        <div class="advantage-col is-old reveal">
+          <h3 data-i18n="advantage.old.title">Software tradicional</h3>
+          <ul>
+            <li data-i18n="advantage.old.item1">Dashboards estáticos que solo muestran información.</li>
+            <li data-i18n="advantage.old.item2">La acción final siempre depende de un humano.</li>
+            <li data-i18n="advantage.old.item3">Poca o ninguna trazabilidad de lo que ocurrió.</li>
+          </ul>
+        </div>
+        <div class="advantage-col is-new reveal">
+          <h3 data-i18n="advantage.new.title">Semtex</h3>
+          <ul>
+            <li data-i18n="advantage.new.item1">Ejecución autónoma de procesos financieros y de comunicación.</li>
+            <li data-i18n="advantage.new.item2">Observabilidad total: cada acción del agente queda auditada.</li>
+            <li data-i18n="advantage.new.item3">Confianza total: el usuario ve y controla lo que el agente hace.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- VISIÓN FUTURA / CIERRE -->
+    <section id="future" class="section section--alt">
+      <div class="future-panel glass-panel reveal">
+        <p class="eyebrow" data-i18n="future.eyebrow">Visión futura y cierre</p>
+        <h2 data-i18n="future.title">El sistema nervioso operativo de tu empresa</h2>
+        <p data-i18n="future.body">Estamos integrando sistemas avanzados de auditoría técnica en tiempo real.</p>
+        <a href="#" id="app-link" class="btn btn--primary" target="_blank" rel="noopener noreferrer">
+          <span class="material-symbols-outlined">open_in_new</span>
+          <span data-i18n="future.cta">Ir a la aplicación</span>
+        </a>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div>
+        <strong data-i18n="footer.tagline">Semtex — Copiloto Administrativo y Financiero con IA.</strong>
+        <p data-i18n="footer.confidential">Documento y proyecto confidenciales, uso interno del equipo Semtex.</p>
+      </div>
+      <div>
+        <span data-i18n="footer.contact_label">Contacto</span>:
+        <a href="mailto:franklinrodriguezdev@gmail.com">Franklin Rodríguez</a>
+      </div>
+      <div data-i18n="footer.rights">© 2026 Semtex. Todos los derechos reservados.</div>
+    </div>
+  </footer>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
