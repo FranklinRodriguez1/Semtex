@@ -1,14 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import * as THREE from "three";
 import { supabase } from "@/lib/supabase";
 
-const AFTER_AUTH_ROUTE = "/view/transfer";
-
 export function Loginy() {
-  const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const [loading, setLoading] = useState(false);
@@ -26,7 +22,8 @@ export function Loginy() {
         password: loginPassword,
       });
       if (signInError) throw signInError;
-      router.push(AFTER_AUTH_ROUTE);
+      // No navegamos aquí: AuthProvider ya escucha el cambio de sesión y
+      // redirige al destino correcto (según sea super-admin o ADMIN/OPERATOR).
     } catch (e) {
       setError((e as Error).message);
     } finally {

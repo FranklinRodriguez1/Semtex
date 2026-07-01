@@ -54,7 +54,7 @@ export function EmailView() {
           Configuración de Correo
         </h1>
         <p className="mt-1 text-[10px] tracking-[0.15em] text-[#3a494b]">
-          NODEMAILER_SMTP_CONFIG
+          NODEMAILER_SMTP_CONFIG · POR USUARIO
         </p>
       </div>
 
@@ -92,7 +92,8 @@ export function EmailView() {
           />
           <p className="pt-1 text-[10px] text-[#3a494b]">
             Genera una contraseña de aplicación en Gmail → Seguridad → Verificación en dos pasos.
-            Se guarda en la base de datos de tu organización.
+            Es opcional y personal: puede ser distinto al correo con el que iniciaste sesión.
+            Se guarda en tu propio usuario, no se comparte con el resto de la organización.
           </p>
         </div>
 

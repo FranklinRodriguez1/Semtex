@@ -18,9 +18,8 @@ const ROLES: RoleDefinition[] = [
       'Subir y consultar documentos',
       'Ver registros financieros',
       'Chat con el agente IA',
-      'Enviar correos vía agente',
-      'Crear y administrar usuarios',
-      'Ver registro de auditoría',
+      'Configurar su propio correo de envío y enviar correos',
+      'Crear y administrar usuarios de su organización',
     ],
   },
   {
@@ -32,7 +31,7 @@ const ROLES: RoleDefinition[] = [
       'Subir y consultar documentos',
       'Ver registros financieros',
       'Chat con el agente IA',
-      'Enviar correos vía agente',
+      'Configurar su propio correo de envío y enviar correos',
     ],
   },
 ];

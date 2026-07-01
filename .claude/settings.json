@@ -2,7 +2,22 @@
   "permissions": {
     "allow": [
       "Bash(npm install *)",
-      "Bash(bunx tsc *)"
+      "Bash(bunx tsc *)",
+      "Bash(bun run *)",
+      "Bash(git stash *)",
+      "Bash(node -e ' *)",
+      "Bash(bun -e ' *)",
+      "Bash(cat)",
+      "Bash(bun \"C:\\\\Users\\\\user2\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-user2-Documents-Semtex\\\\00d88ed6-4b52-4ca5-bcaa-4a3ab4f767ac\\\\scratchpad\\\\check_orgs.mjs\")",
+      "Bash(bun \"C:\\\\Users\\\\user2\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-user2-Documents-Semtex\\\\00d88ed6-4b52-4ca5-bcaa-4a3ab4f767ac\\\\scratchpad\\\\check_orgs2.mjs\")",
+      "Bash(bun \"C:\\\\Users\\\\user2\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-user2-Documents-Semtex\\\\00d88ed6-4b52-4ca5-bcaa-4a3ab4f767ac\\\\scratchpad\\\\check_users_cols.mjs\")",
+      "Bash(rm -f \"C:\\\\Users\\\\user2\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-user2-Documents-Semtex\\\\00d88ed6-4b52-4ca5-bcaa-4a3ab4f767ac\\\\scratchpad\\\\\"*.mjs)",
+      "Bash(rm -v src/app/view/configuration/services/configuration.ts src/app/view/configuration/hooks/useConfiguration.ts src/app/view/configuration/components/RoleTable.tsx src/app/view/configuration/components/IntegrationCard.tsx src/app/view/configuration/types/index.ts)",
+      "Bash(rmdir \"src/app/view/configuration/services\" \"src/app/view/configuration/hooks\" \"src/app/view/configuration/types\")",
+      "Bash(bun \"C:\\\\Users\\\\user2\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-user2-Documents-Semtex\\\\00d88ed6-4b52-4ca5-bcaa-4a3ab4f767ac\\\\scratchpad\\\\check_state.mjs\")"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\user2\\AppData\\Local\\Temp\\claude\\c--Users-user2-Documents-Semtex\\00d88ed6-4b52-4ca5-bcaa-4a3ab4f767ac"
     ]
   }
 }

@@ -62,6 +62,7 @@ export function useSpeech(opts: { onFinal: (text: string) => void; lang?: string
   const [error, setError] = useState<string | null>(null);
   const recRef = useRef<SpeechRecognitionInstance | null>(null);
   const onFinalRef = useRef(opts.onFinal);
+  const manualStopRef = useRef(true);
 
   useEffect(() => {
     onFinalRef.current = opts.onFinal;
@@ -81,7 +82,10 @@ export function useSpeech(opts: { onFinal: (text: string) => void; lang?: string
     const rec = new Ctor();
     rec.lang = lang;
     rec.interimResults = true;
-    rec.continuous = false;
+    // Continuo: el micrófono se queda encendido escuchando frase tras frase
+    // (en vez de apagarse solo al terminar la primera). Se apaga únicamente
+    // cuando el usuario dice "terminado" o vuelve a pulsar el botón (stop()).
+    rec.continuous = true;
     rec.onresult = (e) => {
       let finalText = '';
       let interimText = '';
@@ -93,6 +97,16 @@ export function useSpeech(opts: { onFinal: (text: string) => void; lang?: string
       }
       setInterim(interimText);
       if (finalText.trim()) {
+        const lower = finalText.toLowerCase();
+        const stopIndex = lower.indexOf('terminado');
+        if (stopIndex !== -1) {
+          const before = finalText.slice(0, stopIndex).trim();
+          setInterim('');
+          if (before) onFinalRef.current(before);
+          manualStopRef.current = true;
+          recRef.current?.stop();
+          return;
+        }
         setInterim('');
         onFinalRef.current(finalText.trim());
       }
@@ -101,9 +115,23 @@ export function useSpeech(opts: { onFinal: (text: string) => void; lang?: string
       setError(mapError(e.error));
       setListening(false);
     };
-    rec.onend = () => setListening(false);
+    rec.onend = () => {
+      // Con continuous=true, Chrome igual puede cortar el reconocimiento por
+      // silencio prolongado o límites internos; si no fue un apagado manual
+      // (botón o "terminado"), lo reactivamos para que siga "prendido".
+      if (!manualStopRef.current) {
+        try {
+          rec.start();
+          return;
+        } catch {
+          // no se pudo reiniciar, se apaga
+        }
+      }
+      setListening(false);
+    };
     recRef.current = rec;
     return () => {
+      manualStopRef.current = true;
       try {
         rec.abort();
       } catch {
@@ -118,6 +146,7 @@ export function useSpeech(opts: { onFinal: (text: string) => void; lang?: string
     if (!rec) return;
     setError(null);
     setInterim('');
+    manualStopRef.current = false;
     try {
       rec.start();
       setListening(true);
@@ -127,6 +156,7 @@ export function useSpeech(opts: { onFinal: (text: string) => void; lang?: string
   }, []);
 
   const stop = useCallback(() => {
+    manualStopRef.current = true;
     recRef.current?.stop();
     setListening(false);
   }, []);

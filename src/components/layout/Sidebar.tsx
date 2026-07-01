@@ -47,7 +47,7 @@ export function Sidebar() {
               <span className="text-base">•</span> Upload - Receive
             </Link>
           )}
-          {(me?.isSuperAdmin || me?.role === "ADMIN") && (
+          {(me?.isSuperAdmin || me?.role === "ADMIN" || me?.role === "OPERATOR") && (
             <Link
               className={`flex items-center gap-3 rounded px-4 py-3 text-sm transition-colors ${
                 isActive("/view/configuration")
@@ -83,18 +83,8 @@ export function Sidebar() {
               <span className="text-base">🏢</span> Empresas
             </Link>
           )}
-          {me?.role === "ADMIN" && (
-            <Link
-              className={`flex items-center gap-3 rounded px-4 py-3 text-sm transition-colors ${
-                isActive("/view/audit")
-                  ? "border-l-2 border-[#74f5ff] bg-[#201f21] text-[#E5E1E4] font-semibold"
-                  : "text-[#b9cacb] hover:bg-[#201f21]"
-              }`}
-              href="/view/audit"
-            >
-              <span className="text-base">⚖</span> Audit
-            </Link>
-          )}
+          {/* Vista de Auditoría oculta a propósito: aún no se muestra en el Sidebar
+              (ver src/app/view/audit/page.tsx, bloqueada con RoleGuard). */}
         </nav>
       </div>
       <div className="space-y-2 border-t border-[#3a494b] pt-5">

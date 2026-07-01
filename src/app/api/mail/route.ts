@@ -28,10 +28,10 @@ export async function POST(req: NextRequest) {
     }
 
     const { data } = await supabaseAdmin
-      .from('organizations')
+      .from('users')
       .select('smtp_email, smtp_password')
-      .eq('id', profile.organizationId)
-      .single();
+      .eq('id', caller.id)
+      .maybeSingle();
 
     const smtpEmail = (data as { smtp_email: string | null; smtp_password: string | null } | null)?.smtp_email ?? null;
     const smtpPassword = (data as { smtp_email: string | null; smtp_password: string | null } | null)?.smtp_password ?? null;

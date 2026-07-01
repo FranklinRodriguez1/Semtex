@@ -31,7 +31,7 @@ export async function getCaller(request: Request): Promise<User | null> {
 /** Lee de la BD (fuente de verdad) el rol y la organización del usuario. */
 export async function getCallerProfile(
   userId: string,
-): Promise<{ organizationId: string; role: string } | null> {
+): Promise<{ organizationId: string | null; role: string } | null> {
   const { data, error } = await supabaseAdmin
     .from("users")
     .select("organization_id, role")

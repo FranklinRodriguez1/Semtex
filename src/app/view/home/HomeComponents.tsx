@@ -160,20 +160,27 @@ export default function HomeComponents() {
     void send(trimmed, selectedDocRef.current || undefined);
   }, [injectMessage, say, speak, send]);
 
+  const sceneRef = useRef<import('@/utils/animationHomeThree').ThreeSceneController | null>(null);
+
   useEffect(() => {
     // Carga diferida de three.js: se descarga después del primer pintado en su
     // propio chunk, fuera del bundle inicial del Home.
-    let cleanup: (() => void) | undefined;
     let cancelled = false;
     void import('@/utils/animationHomeThree').then(({ initializeThreeScene }) => {
       if (cancelled) return;
-      cleanup = initializeThreeScene('three-sphere-scene');
+      sceneRef.current = initializeThreeScene('three-sphere-scene');
     });
     return () => {
       cancelled = true;
-      cleanup?.();
+      sceneRef.current?.dispose();
+      sceneRef.current = null;
     };
   }, []);
+
+  // La esfera "habla" (pulso rápido) mientras la IA está generando una respuesta.
+  useEffect(() => {
+    sceneRef.current?.setSpeaking(sending);
+  }, [sending]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -211,7 +218,7 @@ export default function HomeComponents() {
   const hasConversation = messages.length > 0 || sending || error !== null;
 
   return (
-    <div className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden bg-background">
+    <div className="relative flex h-full w-full flex-col items-center overflow-hidden bg-background">
       <div
         className="pointer-events-none absolute inset-0 opacity-5"
         style={{
@@ -221,26 +228,45 @@ export default function HomeComponents() {
         }}
       />
 
-      <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-center justify-center -mt-12">
+      <div
+        className={`relative z-10 mx-auto flex h-full w-full max-w-5xl min-h-0 overflow-hidden px-4 py-6 ${
+          hasConversation ? 'flex-row items-start gap-4' : 'flex-col items-center'
+        }`}
+      >
         <div
-          className="group relative flex h-[650px] w-[650px] items-center justify-center"
+          className={`group relative flex shrink-0 items-center justify-center transition-all duration-500 ease-out ${
+            hasConversation ? 'sticky top-0 h-14 w-14' : 'h-[650px] w-[650px] -mt-12'
+          }`}
           id="canvas-container"
         >
           <div
-            className="pulse-ring pointer-events-none absolute inset-0 rounded-full blur-[120px]"
+            className={`pulse-ring pointer-events-none absolute inset-0 rounded-full ${
+              hasConversation ? 'blur-xl' : 'blur-[120px]'
+            }`}
             style={{ backgroundColor: '#00dbe7' }}
           />
           <div id="three-sphere-scene" className="relative z-20 h-full w-full bg-transparent" />
-          <div className="pointer-events-none absolute left-1/2 top-1/2 h-[680px] w-[680px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-primary-fixed-dim opacity-10 border-dashed animate-[spin_60s_linear_infinite]" />
-          <div className="pointer-events-none absolute left-1/2 top-1/2 h-[620px] w-[620px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-primary-fixed-dim opacity-[0.03] animate-[spin_40s_linear_infinite_reverse]" />
+          {!hasConversation && (
+            <>
+              <div className="pointer-events-none absolute left-1/2 top-1/2 h-[104%] w-[104%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-primary-fixed-dim opacity-10 border-dashed animate-[spin_60s_linear_infinite]" />
+              <div className="pointer-events-none absolute left-1/2 top-1/2 h-[95%] w-[95%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-primary-fixed-dim opacity-[0.03] animate-[spin_40s_linear_infinite_reverse]" />
+            </>
+          )}
+          {hasConversation && (
+            <div className="pointer-events-none absolute left-1/2 top-1/2 h-[110%] w-[110%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-primary-fixed-dim opacity-20 border-dashed animate-[spin_30s_linear_infinite]" />
+          )}
         </div>
 
-        <div className="relative z-30 mt-8 w-full max-w-4xl transition-all duration-300">
-          {/* Conversation panel */}
+        <div
+          className={`relative z-30 flex min-h-0 flex-1 flex-col ${hasConversation ? '' : 'mt-6 w-full max-w-4xl'}`}
+        >
+          {/* Conversation panel: flex-1 + min-h-0 es lo que permite que este panel
+              se quede scrolleable dentro del espacio disponible en vez de empujar
+              (desbordar) el resto de la página cuando crece el historial. */}
           {hasConversation && (
             <div
               ref={scrollRef}
-              className="glass-panel mb-4 max-h-[38vh] overflow-y-auto rounded-lg px-5 py-4 space-y-3 shadow-2xl"
+              className="glass-panel mb-4 min-h-0 flex-1 overflow-y-auto rounded-lg px-5 py-4 space-y-3 shadow-2xl"
             >
               {messages.map((m, i) => (
                 <div

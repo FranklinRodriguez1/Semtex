@@ -32,7 +32,10 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 const LOGIN_ROUTE = "/view/loginy";
-const AFTER_AUTH_ROUTE = "/view/transfer";
+/** Destino tras login para roles de organización (ADMIN/OPERATOR): la Home con el chat. */
+const AFTER_AUTH_ROUTE = "/";
+/** El super-admin de plataforma no tiene organización, así que no puede entrar a /view/transfer. */
+const SUPERADMIN_AFTER_AUTH_ROUTE = "/view/admin";
 
 function isLoginRoute(pathname: string | null): boolean {
   return !!pathname && pathname.startsWith(LOGIN_ROUTE);
@@ -99,10 +102,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (status === "checking") return;
     if (status === "unauthenticated" && isProtectedRoute(pathname)) {
       router.replace(LOGIN_ROUTE);
-    } else if (status === "authenticated" && isLoginRoute(pathname)) {
-      router.replace(AFTER_AUTH_ROUTE);
+      return;
     }
-  }, [status, pathname, router]);
+    if (status === "authenticated" && isLoginRoute(pathname)) {
+      // Espera a que /api/me cargue: el destino depende de si es super-admin
+      // de plataforma (sin organización) o un ADMIN/OPERATOR de una empresa.
+      if (me === null) return;
+      router.replace(me.isSuperAdmin ? SUPERADMIN_AFTER_AUTH_ROUTE : AFTER_AUTH_ROUTE);
+    }
+  }, [status, pathname, router, me]);
 
   return (
     <AuthContext.Provider

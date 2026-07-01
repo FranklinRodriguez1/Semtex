@@ -1,8 +1,14 @@
 import * as THREE from 'three';
 
-export function initializeThreeScene(containerId: string) {
+export interface ThreeSceneController {
+  /** Alterna el pulso rápido de la esfera para simular que la IA está "hablando". */
+  setSpeaking: (speaking: boolean) => void;
+  dispose: () => void;
+}
+
+export function initializeThreeScene(containerId: string): ThreeSceneController {
   const container = document.getElementById(containerId);
-  if (!container) return () => {};
+  if (!container) return { setSpeaking: () => {}, dispose: () => {} };
 
   const scene = new THREE.Scene();
 
@@ -80,6 +86,7 @@ export function initializeThreeScene(containerId: string) {
   scene.add(core);
 
   let animationFrameId = 0;
+  let speaking = false;
 
   const introStart = performance.now();
   const introDuration = 1200;
@@ -94,12 +101,15 @@ export function initializeThreeScene(containerId: string) {
       clamp01((performance.now() - introStart) / introDuration)
     );
 
-    sphere.rotation.y += 0.002;
+    sphere.rotation.y += speaking ? 0.006 : 0.002;
     sphere.rotation.x += 0.001;
     particlesMesh.rotation.y += 0.0005;
 
     const time = Date.now() * 0.001;
-    const pulse = Math.sin(time) * 0.05 + 1;
+    // "Hablando": pulso más rápido y marcado, simula que la esfera vibra al responder.
+    const pulse = speaking
+      ? Math.sin(time * 9) * 0.12 + 1
+      : Math.sin(time) * 0.05 + 1;
     const introScale = 0.02 + introProgress * 0.98;
 
     sphere.scale.set(
@@ -141,25 +151,30 @@ export function initializeThreeScene(containerId: string) {
 
   document.addEventListener('visibilitychange', handleVisibility);
 
-  return () => {
-    window.removeEventListener('resize', handleResize);
-    document.removeEventListener('visibilitychange', handleVisibility);
-    cancelAnimationFrame(animationFrameId);
+  return {
+    setSpeaking: (value: boolean) => {
+      speaking = value;
+    },
+    dispose: () => {
+      window.removeEventListener('resize', handleResize);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      cancelAnimationFrame(animationFrameId);
 
-    geometry.dispose();
-    material.dispose();
+      geometry.dispose();
+      material.dispose();
 
-    particlesGeometry.dispose();
-    particlesMaterial.dispose();
+      particlesGeometry.dispose();
+      particlesMaterial.dispose();
 
-    coreGeometry.dispose();
-    coreMaterial.dispose();
+      coreGeometry.dispose();
+      coreMaterial.dispose();
 
-    renderer.dispose();
+      renderer.dispose();
 
-    if (container.contains(renderer.domElement)) {
-      container.removeChild(renderer.domElement);
-    }
+      if (container.contains(renderer.domElement)) {
+        container.removeChild(renderer.domElement);
+      }
+    },
   };
 }
 
